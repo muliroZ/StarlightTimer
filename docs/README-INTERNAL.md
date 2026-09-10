@@ -12,11 +12,12 @@ A cozy, space-themed Pomodoro web application with gamified progression, co-op f
 
 | Doc | What it covers | Read it when |
 |---|---|---|
-| [01 — Product Overview](docs/01-product-overview.md) | Vision, personas, feature catalogue, MVP boundary, domain glossary | You're new to the project |
-| [02 — Architecture](docs/02-architecture.md) | System context, containers, module map, key decisions and trade-offs, core data flows | You're about to write backend code |
-| [03 — Domain Model](docs/03-domain-model.md) | Candidate entities, relationships, and open modelling questions — input for the team's ER session | You're designing the schema |
-| [04 — Frontend & Design System](docs/04-frontend-design-system.md) | Design tokens extracted from the prototype, screen inventory, component decomposition | You're building UI |
-| [05 — Planning Checklist](docs/05-planning-checklist.md) | Every decision still open, grouped and prioritised | Every planning meeting |
+| [01 — Product Overview](01-product-overview.md) | Vision, personas, feature catalogue, MVP boundary, domain glossary | You're new to the project |
+| [02 — Architecture](02-architecture.md) | System context, containers, module map, key decisions and trade-offs, core data flows | You're about to write backend code |
+| [03 — Domain Model](03-domain-model.md) | Candidate entities, relationships, and open modelling questions — input for the team's ER session | You're designing the schema |
+| [04 — Frontend & Design System](04-frontend-design-system.md) | Design tokens extracted from the prototype, screen inventory, component decomposition | You're building UI |
+| [05 — Planning Checklist](05-planning-checklist.md) | Every decision still open, grouped and prioritised | Every planning meeting |
+| [06 — Git Workflow](06-git-workflow.md) | Guide explaining the Git/GitHub workflow of this project | Before your first branch |
 
 ## How to use these docs
 
