@@ -1,160 +1,160 @@
-# 03 — Domain Model
+# 03 — Modelo de Domínio
 
-Input for the team's entity brainstorming session. This is a **candidate map**, not a finished ER diagram — it exists so the session starts from a critique rather than a blank page.
+Insumo para a sessão de brainstorming de entidades do time. Este é um **mapa candidato**, não um diagrama ER finalizado — ele existe para que a sessão comece a partir de uma crítica, e não de uma página em branco.
 
-## Candidate entity map
+## Mapa de entidades candidatas
 
 ```mermaid
 erDiagram
-    USER ||--|| USER_PROFILE : has
-    USER ||--o{ AUTH_IDENTITY : "signs in via"
-    USER ||--|| USER_SETTINGS : configures
-    USER ||--o{ TIMER_PRESET : defines
+    USER ||--|| USER_PROFILE : "possui"
+    USER ||--o{ AUTH_IDENTITY : "autentica via"
+    USER ||--|| USER_SETTINGS : "configura"
+    USER ||--o{ TIMER_PRESET : "define"
 
-    USER ||--o{ FOCUS_SESSION : runs
-    FOCUS_SESSION ||--o{ SESSION_ANNOTATION : "annotated by"
-    FOCUS_SESSION }o--o| ROOM : "may belong to"
+    USER ||--o{ FOCUS_SESSION : "executa"
+    FOCUS_SESSION ||--o{ SESSION_ANNOTATION : "anotada por"
+    FOCUS_SESSION }o--o| ROOM : "pode pertencer a"
 
-    USER ||--o{ XP_ENTRY : earns
-    USER ||--o{ USER_BADGE : unlocks
-    BADGE ||--o{ USER_BADGE : "awarded as"
-    USER ||--o{ USER_TRACK_PROGRESS : advances
-    PROGRESSION_TRACK ||--o{ USER_TRACK_PROGRESS : "measured by"
-    CONSTELLATION ||--o{ PROGRESSION_TRACK : groups
+    USER ||--o{ XP_ENTRY : "ganha"
+    USER ||--o{ USER_BADGE : "desbloqueia"
+    BADGE ||--o{ USER_BADGE : "concedido como"
+    USER ||--o{ USER_TRACK_PROGRESS : "avanca em"
+    PROGRESSION_TRACK ||--o{ USER_TRACK_PROGRESS : "medida por"
+    CONSTELLATION ||--o{ PROGRESSION_TRACK : "agrupa"
 
-    USER ||--o{ FRIENDSHIP : "requests / receives"
-    USER ||--o{ ROOM_MEMBERSHIP : joins
-    ROOM ||--o{ ROOM_MEMBERSHIP : contains
-    USER ||--o{ ROOM : hosts
+    USER ||--o{ FRIENDSHIP : "solicita / recebe"
+    USER ||--o{ ROOM_MEMBERSHIP : "entra em"
+    ROOM ||--o{ ROOM_MEMBERSHIP : "contem"
+    USER ||--o{ ROOM : "hospeda"
 
-    USER ||--o{ REMINDER : schedules
-    USER ||--o{ NOTIFICATION : receives
-    USER ||--o{ PUSH_SUBSCRIPTION : registers
+    USER ||--o{ REMINDER : "agenda"
+    USER ||--o{ NOTIFICATION : "recebe"
+    USER ||--o{ PUSH_SUBSCRIPTION : "registra"
 
-    USER ||--o{ USER_UNLOCK : owns
-    COSMETIC_ITEM ||--o{ USER_UNLOCK : "unlocked as"
-    USER ||--o| MUSIC_LINK : "connects"
+    USER ||--o{ USER_UNLOCK : "possui"
+    COSMETIC_ITEM ||--o{ USER_UNLOCK : "desbloqueado como"
+    USER ||--o| MUSIC_LINK : "conecta"
 ```
 
-## Entity notes
+## Notas sobre as entidades
 
-Only the entities with a non-obvious design question attached. Straightforward lookup tables are omitted.
+Apenas as entidades com uma questão de design não óbvia associada. Tabelas de lookup triviais foram omitidas.
 
 ### `USER` / `USER_PROFILE` / `AUTH_IDENTITY`
 
-Split deliberately. `USER` holds identity and lifecycle (id, email, status, created_at, deleted_at). `USER_PROFILE` holds display concerns (display name, avatar, timezone, bio). `AUTH_IDENTITY` holds one row per sign-in method, so adding Google login later doesn't require restructuring.
+Separadas de propósito. `USER` guarda identidade e ciclo de vida (id, e-mail, status, created_at, deleted_at). `USER_PROFILE` guarda questões de exibição (nome de exibição, avatar, fuso horário, bio). `AUTH_IDENTITY` guarda uma linha por método de login, de forma que adicionar login com Google depois não exija reestruturação.
 
-Keeping password hashes out of `USER_PROFILE` matters more than it looks: profile data gets returned to friends, and a table you never join into a friend-visible query is a table you can't accidentally leak.
+Manter hashes de senha fora de `USER_PROFILE` importa mais do que parece: dados de perfil são retornados para amigos, e uma tabela que você nunca faz join em uma query visível a amigos é uma tabela que você não consegue vazar por acidente.
 
 ### `FOCUS_SESSION`
 
-The central table. Everything else is either configuration for it or a consequence of it.
+A tabela central. Todo o resto é ou configuração para ela, ou consequência dela.
 
-Fields worth arguing about in the session:
+Campos que valem uma discussão na sessão:
 
-- `type` — `FOCUS` / `SHORT_BREAK` / `LONG_BREAK`. Should breaks live in the same table as focus cycles? Recommendation: yes. They share every field, and "show me my day" becomes a single ordered query instead of a merge.
-- `status` — `RUNNING` / `PAUSED` / `COMPLETED` / `ABANDONED`. Per **AD-3**, the row exists from the moment the session starts.
-- `planned_duration_seconds` vs `actual_focus_seconds` — you need both. Planned drives the star lifecycle and the completion check; actual (planned minus accumulated pause time) drives honest statistics.
-- `paused_total_seconds` — accumulated pause time. Simpler than a separate pause-interval table, and sufficient unless you want to show *when* someone paused.
-- `room_id` — nullable FK. A co-op session is an ordinary session that happens to reference a room.
-- `started_at` / `ended_at` — `timestamptz`, always UTC.
+- `type` — `FOCUS` / `SHORT_BREAK` / `LONG_BREAK`. Pausas devem viver na mesma tabela que ciclos de foco? Recomendação: sim. Elas compartilham todos os campos, e "me mostre meu dia" vira uma única query ordenada em vez de um merge.
+- `status` — `RUNNING` / `PAUSED` / `COMPLETED` / `ABANDONED`. Conforme **AD-3**, a linha existe desde o momento em que a sessão começa.
+- `planned_duration_seconds` vs `actual_focus_seconds` — vocês precisam dos dois. O planejado dirige o ciclo de vida da estrela e a verificação de conclusão; o real (planejado menos o tempo de pausa acumulado) dirige estatísticas honestas.
+- `paused_total_seconds` — tempo de pausa acumulado. Mais simples que uma tabela separada de intervalos de pausa, e suficiente a menos que vocês queiram mostrar *quando* a pessoa pausou.
+- `room_id` — FK anulável. Uma sessão co-op é uma sessão comum que por acaso referencia uma sala.
+- `started_at` / `ended_at` — `timestamptz`, sempre em UTC.
 
-**Open question:** is a session that was paused for two hours and then completed a legitimate star? See **D-2**.
+**Questão em aberto:** uma sessão que ficou pausada por duas horas e depois foi concluída é uma estrela legítima? Veja **D-2**.
 
 ### `SESSION_ANNOTATION`
 
-"Private annotations" needs its privacy model pinned down before schema. Three readings:
+"Anotações privadas" precisa ter seu modelo de privacidade definido antes do schema. Três leituras possíveis:
 
-1. *Private* = not shared with friends. Ordinary row-level authorisation. Simple.
-2. *Private* = not readable by operators. Requires application-level encryption with a user-derived key, which then breaks search and makes password reset destructive.
-3. *Private* = a distinct note type alongside future shared notes. Needs a visibility column now.
+1. *Privada* = não compartilhada com amigos. Autorização comum a nível de linha. Simples.
+2. *Privada* = não legível pelos operadores. Exige criptografia em nível de aplicação com chave derivada do usuário, o que então quebra busca e torna a redefinição de senha destrutiva.
+3. *Privada* = um tipo de nota distinto ao lado de futuras notas compartilhadas. Exige uma coluna de visibilidade desde já.
 
-Reading 1 is almost certainly what's meant, but confirm it (**D-8**) — retrofitting reading 2 is expensive.
+A leitura 1 é quase certamente o que se quer dizer, mas confirmem (**D-8**) — adaptar para a leitura 2 depois é caro.
 
-Also worth deciding: are annotations attached strictly to a session, or can they be free-floating daily notes? A nullable `session_id` plus a `note_date` covers both, at the cost of a slightly muddier model.
+Também vale decidir: anotações são presas estritamente a uma sessão, ou podem ser notas diárias soltas? Um `session_id` anulável mais um `note_date` cobre os dois casos, ao custo de um modelo um pouco mais confuso.
 
 ### `XP_ENTRY`
 
-Append-only ledger per **AD-6**. One row per award: `user_id`, `amount`, `source_type` (`SESSION_COMPLETED`, `STREAK_BONUS`, `BADGE_UNLOCKED`, `COOP_BONUS`), `source_id`, `awarded_at`.
+Ledger append-only conforme **AD-6**. Uma linha por concessão: `user_id`, `amount`, `source_type` (`SESSION_COMPLETED`, `STREAK_BONUS`, `BADGE_UNLOCKED`, `COOP_BONUS`), `source_id`, `awarded_at`.
 
-Level and rank are **derived** from the ledger sum, not stored as authoritative values. Cache them on `USER_PROFILE` if profile queries get slow, but the ledger stays the source of truth.
+Nível e rank são **derivados** da soma do ledger, não armazenados como valores autoritativos. Faça cache deles em `USER_PROFILE` se as queries de perfil ficarem lentas, mas o ledger permanece a fonte da verdade.
 
 ### `BADGE` / `USER_BADGE`
 
-`BADGE` is a catalogue: code, name, description, visual definition, and a criteria descriptor. `USER_BADGE` records unlocks and, for cumulative badges, current progress (the prototype shows "Deep Field · 12 / 25").
+`BADGE` é um catálogo: código, nome, descrição, definição visual e um descritor de critério. `USER_BADGE` registra desbloqueios e, para badges cumulativos, o progresso atual (o protótipo mostra "Deep Field · 12 / 25").
 
-The real design question is **how criteria are expressed**:
+A verdadeira questão de design é **como os critérios são expressos**:
 
-| Option | Cost | Flexibility |
+| Opção | Custo | Flexibilidade |
 |---|---|---|
-| Java class per badge | New badge = deploy | Full |
-| JSON criteria + generic evaluator | New badge = data insert | Limited to modelled predicates |
-| Hybrid: JSON for counting badges, code for exotic ones | Moderate | Good |
+| Uma classe Java por badge | Badge novo = deploy | Total |
+| Critério em JSON + avaliador genérico | Badge novo = insert de dado | Limitada aos predicados modelados |
+| Híbrido: JSON para badges de contagem, código para os exóticos | Moderado | Boa |
 
-The hybrid is usually right. Most badges are "do X, N times" and want to be data. A few ("Night Watch" — sessions after midnight) want code. Don't build the generic evaluator until you have at least three badges that would use it.
+O híbrido costuma ser o certo. A maioria dos badges é "faça X, N vezes" e quer ser dado. Alguns poucos ("Night Watch" — sessões depois da meia-noite) querem ser código. Não construam o avaliador genérico até ter pelo menos três badges que o usariam.
 
 ### `FRIENDSHIP`
 
-Directional row (`requester_id`, `addressee_id`, `status`, `responded_at`) with a symmetric read.
+Linha direcional (`requester_id`, `addressee_id`, `status`, `responded_at`) com leitura simétrica.
 
-Two constraints save pain later: a unique index on the ordered pair, and a check that `requester_id <> addressee_id`. Decide whether `BLOCKED` lives in this table or a separate `USER_BLOCK` table — separate is cleaner, because a block should survive the friendship being deleted.
+Duas constraints poupam dor depois: um índice único no par ordenado, e um check de que `requester_id <> addressee_id`. Decidam se `BLOCKED` vive nessa tabela ou em uma tabela `USER_BLOCK` separada — separada é mais limpo, porque um bloqueio deve sobreviver à exclusão da amizade.
 
 ### `ROOM` / `ROOM_MEMBERSHIP`
 
-`ROOM` needs: host, name, status (`LOBBY` / `ACTIVE` / `CLOSED`), current cycle reference, capacity, and an invite mechanism. `ROOM_MEMBERSHIP` needs: joined_at, left_at, and role.
+`ROOM` precisa de: host, nome, status (`LOBBY` / `ACTIVE` / `CLOSED`), referência ao ciclo atual, capacidade e um mecanismo de convite. `ROOM_MEMBERSHIP` precisa de: joined_at, left_at e papel.
 
-The hard questions are behavioural rather than structural, and all of them are unanswered — see **R-1** through **R-5**. Don't design this table until they're settled; the answers change the shape.
+As perguntas difíceis são comportamentais, e não estruturais, e todas estão sem resposta — veja **R-1** a **R-5**. Não projetem essa tabela até que estejam resolvidas; as respostas mudam o formato dela.
 
 ### `PROGRESSION_TRACK` / `CONSTELLATION`
 
-The prototype shows four tracks ("Main sequence hours", "Constellation completed", "Weekly focus goal", "Break discipline"). Two of those are lifetime cumulative and two are periodic (weekly). That distinction needs a `period` column and a reset job, or periodic tracks need to be computed on read from the session table instead of stored. **Computing on read is simpler and probably correct at this scale** — a weekly goal is one `COUNT(*)` with a date filter.
+O protótipo mostra quatro trilhas ("Main sequence hours", "Constellation completed", "Weekly focus goal", "Break discipline"). Duas delas são cumulativas vitalícias e duas são periódicas (semanais). Essa distinção exige uma coluna `period` e um job de reset, ou então as trilhas periódicas precisam ser calculadas na leitura a partir da tabela de sessões em vez de armazenadas. **Calcular na leitura é mais simples e provavelmente correto nesta escala** — uma meta semanal é um `COUNT(*)` com filtro de data.
 
-Consider whether `PROGRESSION_TRACK` needs to exist as a table at all in MVP, or whether it's a hard-coded catalogue in code.
+Considerem se `PROGRESSION_TRACK` precisa existir como tabela no MVP, ou se é um catálogo fixo em código.
 
 ### `MUSIC_LINK`
 
-If external streaming is used, this holds the OAuth refresh token for the provider. That makes it the most sensitive table in the schema after credentials: encrypt the token column at rest, never log it, never return it to the client, and make account deletion revoke it upstream rather than just dropping the row.
+Se streaming externo for usado, esta tabela guarda o refresh token OAuth do provedor. Isso a torna a tabela mais sensível do schema depois das credenciais: criptografem a coluna do token em repouso, nunca a registrem em log, nunca a retornem ao cliente, e façam com que a exclusão de conta revogue o token no provedor em vez de apenas apagar a linha.
 
-## Modelling conventions to agree on
+## Convenções de modelagem a combinar
 
-Settle these once, before the first migration, so the schema stays uniform:
+Definam isso uma vez, antes da primeira migration, para que o schema permaneça uniforme:
 
-| Question | Recommendation | Rationale |
+| Questão | Recomendação | Justificativa |
 |---|---|---|
-| Primary keys | `BIGINT GENERATED ALWAYS AS IDENTITY`, plus a `UUID` public id on user-facing entities | Sequential ids are efficient internally; exposing them leaks user counts and enables enumeration |
-| Timestamps | `timestamptz`, always UTC | Ambiguity here is unrecoverable later |
-| Enums | `VARCHAR` + `CHECK` constraint, not Postgres `ENUM` | Postgres enums are painful to alter |
-| Soft delete | Only on `USER`; hard delete elsewhere | Soft delete everywhere means every query needs a filter, and one forgotten filter is a data leak |
-| Naming | `snake_case`, plural tables, `_id` suffix on FKs | Consistency over preference |
-| Money/duration | Durations in seconds as `INTEGER` | Avoids interval arithmetic surprises |
+| Chaves primárias | `BIGINT GENERATED ALWAYS AS IDENTITY`, mais um id público `UUID` nas entidades expostas ao usuário | Ids sequenciais são eficientes internamente; expô-los revela a contagem de usuários e permite enumeração |
+| Timestamps | `timestamptz`, sempre em UTC | Ambiguidade aqui é irrecuperável depois |
+| Enums | `VARCHAR` + constraint `CHECK`, não `ENUM` do Postgres | Enums do Postgres são dolorosos de alterar |
+| Soft delete | Apenas em `USER`; hard delete no resto | Soft delete em tudo significa que toda query precisa de um filtro, e um filtro esquecido é um vazamento de dados |
+| Nomenclatura | `snake_case`, tabelas no plural, sufixo `_id` em FKs | Consistência acima de preferência |
+| Dinheiro/duração | Durações em segundos como `INTEGER` | Evita surpresas de aritmética com intervalos |
 
-## Indexing starting points
+## Pontos de partida para indexação
 
-The queries that will dominate:
+As queries que vão dominar:
 
 ```sql
--- Session history and "today" panel
+-- Histórico de sessões e painel "hoje"
 CREATE INDEX ON focus_session (user_id, started_at DESC);
 
--- Stale RUNNING session cleanup job
+-- Job de limpeza de sessões RUNNING travadas
 CREATE INDEX ON focus_session (status, started_at) WHERE status = 'RUNNING';
 
--- Friend ranking: sum XP per user in a period
+-- Ranking de amigos: soma de XP por usuário em um período
 CREATE INDEX ON xp_entry (user_id, awarded_at DESC);
 
--- Friendship symmetric lookup
+-- Busca simétrica de amizade
 CREATE INDEX ON friendship (addressee_id, status);
 CREATE INDEX ON friendship (requester_id, status);
 ```
 
-Add these when the corresponding query exists, not before. Measure with `EXPLAIN ANALYZE` on realistic data volumes rather than assuming.
+Adicionem esses índices quando a query correspondente existir, não antes. Meçam com `EXPLAIN ANALYZE` sobre volumes de dados realistas em vez de supor.
 
-## Questions for the brainstorming session
+## Perguntas para a sessão de brainstorming
 
-Bring these to the table:
+Levem estas para a mesa:
 
-1. Do breaks belong in `FOCUS_SESSION` or a separate table?
-2. Is an annotation bound to a session, to a date, or to either?
-3. Are progression tracks data or code in the MVP?
-4. Does the friend ranking use lifetime XP, periodic XP, or a separate score entirely?
-5. What is the smallest set of tables that supports the MVP boundary in doc 01? Build that, and leave the rest as diagram-only until the feature is scheduled.
+1. Pausas pertencem a `FOCUS_SESSION` ou a uma tabela separada?
+2. Uma anotação está presa a uma sessão, a uma data, ou a qualquer um dos dois?
+3. Trilhas de progressão são dado ou código no MVP?
+4. O ranking de amigos usa XP vitalício, XP periódico, ou uma pontuação separada?
+5. Qual é o menor conjunto de tabelas que sustenta o limite de MVP do doc 01? Construam esse conjunto e deixem o resto apenas no diagrama até a feature ser agendada.
