@@ -1,122 +1,122 @@
-# 06 — Git Workflow & Collaboration Guide
+# 06 — Fluxo de Git & Guia de Colaboração
 
-This doc explains how the team moves code from an idea to `main`. It's written for every collaborator — read it before your first branch, and re-read it if the flow ever feels ambiguous mid-PR.
+Este documento explica como o time leva código de uma ideia até a `main`. Foi escrito para todo colaborador — leia antes da sua primeira branch, e releia se o fluxo parecer ambíguo no meio de um PR.
 
-It complements, rather than replaces, the process items already open in [05 — Planning Checklist](05-planning-checklist.md) (see **T-1** through **Q-3**). Once the team settles repo strategy, CI provider, and review rules for real, update *this* doc in the same PR — per the README's own convention.
+Ele complementa, em vez de substituir, os itens de processo já em aberto no [05 — Checklist de Planejamento](05-planning-checklist.md) (veja de **T-1** a **Q-3**). Assim que o time definir de fato a estratégia de repositório, o provedor de CI e as regras de review, atualize *este* documento no mesmo PR — conforme a própria convenção do README.
 
 ---
 
-## 1. Branch model
+## 1. Modelo de branches
 
-Three tiers, each with a different purpose and a different amount of ceremony:
+Três níveis, cada um com um propósito diferente e uma quantidade diferente de cerimônia:
 
-| Branch | Role | Protected? | Who merges into it |
+| Branch | Papel | Protegida? | Quem faz merge nela |
 |---|---|---|---|
-| `main` | Always deployable. Reflects a finished, reviewed development module. | Yes — enforced ruleset | Only via reviewed PR from `dev` |
-| `dev` | Integration branch for the module currently in progress. | Yes — lighter ruleset | Only via reviewed PR from `<type>/*` branches |
-| `<type>/*` | Where actual work happens. Short-lived, one topic each. | No | N/A — this *is* the working branch |
+| `main` | Sempre implantável. Reflete um módulo de desenvolvimento finalizado e revisado. | Sim — ruleset rígido | Apenas via PR revisado a partir de `dev` |
+| `dev` | Branch de integração do módulo atualmente em andamento. | Sim — ruleset mais leve | Apenas via PR revisado a partir de branches `<tipo>/*` |
+| `<tipo>/*` | Onde o trabalho de fato acontece. Curta duração, um tópico cada. | Não | N/A — esta *é* a branch de trabalho |
 
 ```mermaid
 gitGraph
-    commit id: "module 0 baseline"
+    commit id: "baseline modulo 0"
     branch dev
     checkout dev
-    commit id: "dev baseline"
+    commit id: "baseline dev"
     branch feat/session-timer
     checkout feat/session-timer
-    commit id: "timer skeleton"
-    commit id: "server-authoritative check"
+    commit id: "esqueleto do timer"
+    commit id: "verificacao no servidor"
     checkout dev
     merge feat/session-timer
     branch fix/timer-drift
     checkout fix/timer-drift
-    commit id: "clamp clock drift"
+    commit id: "limita desvio de relogio"
     checkout dev
     merge fix/timer-drift
     branch docs/api-conventions
     checkout docs/api-conventions
-    commit id: "document T-9 conventions"
+    commit id: "documenta convencoes T-9"
     checkout dev
     merge docs/api-conventions
     checkout main
-    merge dev tag: "module 1 done"
+    merge dev tag: "modulo 1 concluido"
 ```
 
-### Branch naming: `<type>/<short-description>`
+### Nomenclatura de branch: `<tipo>/<descricao-curta>`
 
-| Type | Use for | Example |
+| Tipo | Usar para | Exemplo |
 |---|---|---|
-| `feat` | A new feature or capability | `feat/coop-room-lobby` |
-| `fix` | A bug fix | `fix/streak-timezone-bug` |
-| `docs` | Documentation-only changes | `docs/update-domain-model` |
-| `refactor` | Restructuring code with no behaviour change | `refactor/extract-derive-stage` |
-| `test` | Adding or fixing tests only | `test/xp-ledger-integration` |
-| `chore` | Tooling, deps, config, CI | `chore/setup-flyway` |
-| `style` | Formatting only, no logic change | `style/lint-frontend` |
+| `feat` | Uma nova feature ou capacidade | `feat/coop-room-lobby` |
+| `fix` | Correção de bug | `fix/streak-timezone-bug` |
+| `docs` | Mudanças apenas de documentação | `docs/update-domain-model` |
+| `refactor` | Reestruturação de código sem mudança de comportamento | `refactor/extract-derive-stage` |
+| `test` | Adicionar ou corrigir apenas testes | `test/xp-ledger-integration` |
+| `chore` | Ferramental, dependências, config, CI | `chore/setup-flyway` |
+| `style` | Apenas formatação, sem mudança de lógica | `style/lint-frontend` |
 
-Keep the description short, kebab-case, and specific enough that a teammate can guess the contents from the name alone. If the team starts using an issue tracker (**Q-3**), prefix with the ticket number: `feat/42-coop-room-lobby`.
-
----
-
-## 2. Branch protection rulesets
-
-Set these up in GitHub repo settings → Rules → Rulesets, for both `main` and `dev`.
-
-**`main`** — the strict ruleset:
-- Require a pull request before merging. No direct pushes, including from admins.
-- Require at least one approving review (raise to two if the team is large enough to support it).
-- Require status checks to pass — CI must be green (see §5).
-- Require branches to be up to date before merging.
-- Block force pushes and branch deletion.
-- Optionally: require linear history, so `main`'s log reads as one module per merge, not a tangle.
-
-**`dev`** — a lighter version of the same idea:
-- Require a pull request before merging into it (no one pushes directly, even to fix something small — that's what `fix/*` is for).
-- Require at least one approving review.
-- Require CI to pass.
-- Force pushes and deletion can stay blocked here too — there's rarely a good reason to rewrite `dev` history.
-
-The point of protecting `dev` as well as `main` is that a bad merge into `dev` still blocks everyone else building on top of it for the rest of the module. Protection isn't just for the branch that ships — it's for the branch other people's work depends on.
+Mantenha a descrição curta, em kebab-case, e específica o bastante para que um colega consiga adivinhar o conteúdo só pelo nome. Se o time começar a usar um rastreador de issues (**Q-3**), prefixe com o número do ticket: `feat/42-coop-room-lobby`.
 
 ---
 
-## 3. The development cycle, step by step
+## 2. Rulesets de proteção de branch
 
-1. **Pick up a piece of work.** Ideally it maps to an item in doc 05 or a tracked issue (**Q-3**).
-2. **Branch off `dev`**, never off `main`:
+Configure isso em GitHub repo settings → Rules → Rulesets, tanto para `main` quanto para `dev`.
+
+**`main`** — o ruleset rígido:
+- Exigir um pull request antes do merge. Sem pushes diretos, inclusive de admins.
+- Exigir ao menos uma aprovação em review (suba para duas se o time for grande o suficiente para sustentar isso).
+- Exigir que os status checks passem — a CI precisa estar verde (veja §5).
+- Exigir que as branches estejam atualizadas antes do merge.
+- Bloquear force pushes e exclusão da branch.
+- Opcionalmente: exigir histórico linear, para que o log da `main` se leia como um módulo por merge, e não como um emaranhado.
+
+**`dev`** — uma versão mais leve da mesma ideia:
+- Exigir um pull request antes do merge (ninguém dá push direto, nem para consertar algo pequeno — é para isso que existe `fix/*`).
+- Exigir ao menos uma aprovação em review.
+- Exigir CI verde.
+- Force pushes e exclusão podem continuar bloqueados aqui também — raramente há um bom motivo para reescrever o histórico da `dev`.
+
+O objetivo de proteger a `dev` além da `main` é que um merge ruim na `dev` ainda trava todo mundo que está construindo em cima dela pelo resto do módulo. Proteção não é só para a branch que vai para produção — é para a branch da qual o trabalho dos outros depende.
+
+---
+
+## 3. O ciclo de desenvolvimento, passo a passo
+
+1. **Pegue um pedaço de trabalho.** O ideal é que ele corresponda a um item do doc 05 ou a uma issue rastreada (**Q-3**).
+2. **Crie a branch a partir de `dev`**, nunca de `main`:
    ```bash
    git checkout dev
    git pull origin dev
-   git checkout -b feat/short-description
+   git checkout -b feat/descricao-curta
    ```
-3. **Work on the branch.** Commit early and often, using Conventional Commits (§4). Push regularly so teammates can see progress and so you don't lose work.
-4. **Keep the branch current.** If `dev` moves while you're working, rebase (or merge) it in before opening a PR, so review happens against a clean diff:
+3. **Trabalhe na branch.** Faça commits cedo e com frequência, usando Conventional Commits (§4). Dê push regularmente para que os colegas vejam o progresso e para que você não perca trabalho.
+4. **Mantenha a branch atualizada.** Se a `dev` andar enquanto você trabalha, faça rebase (ou merge) dela antes de abrir o PR, para que o review aconteça sobre um diff limpo:
    ```bash
    git fetch origin
    git rebase origin/dev
    ```
-5. **Open a PR into `dev`**, not `main`. Fill in the description (§5), link any related checklist item or issue.
-6. **Review and iterate.** At least one teammate reviews; address comments as new commits (don't force-push mid-review — it hides what changed since the last look).
-7. **Merge and delete the branch.** Squash-merge is recommended here only if the PR have several minor commits, so `dev`'s history reads as one commit per feature rather than every intermediate "wip" commit. If it's not the case, proceed with the traditional Merge Commit.
-8. **Repeat 2–7** for every feature, fix, and doc change that belongs to the current development module.
-9. **When the module is complete**, open a PR from `dev` into `main`. This is the higher-stakes review — treat it as a checkpoint, not a formality: does the module actually work end-to-end, are docs updated, does the checklist reflect reality?
-10. **Merge into `main`** once approved and CI is green. Optionally tag the merge commit (`v0.1.0`, `v0.2.0`, ...) so the module boundary is visible in the repo's history, not just in memory.
+5. **Abra um PR para `dev`**, não para `main`. Preencha a descrição (§5), vincule o item do checklist ou a issue relacionada.
+6. **Revise e itere.** Ao menos um colega revisa; responda aos comentários com novos commits (não faça force-push no meio do review — isso esconde o que mudou desde a última olhada).
+7. **Faça o merge e apague a branch.** Squash-merge é recomendado aqui apenas se o PR tiver vários commits menores, para que o histórico da `dev` se leia como um commit por feature em vez de cada "wip" intermediário. Se não for o caso, siga com o Merge Commit tradicional.
+8. **Repita de 2 a 7** para cada feature, correção e mudança de documentação que pertença ao módulo de desenvolvimento atual.
+9. **Quando o módulo estiver completo**, abra um PR de `dev` para `main`. Este é o review de maior peso — trate-o como um checkpoint, não como formalidade: o módulo realmente funciona ponta a ponta, a documentação está atualizada, o checklist reflete a realidade?
+10. **Faça o merge na `main`** assim que aprovado e com a CI verde. Opcionalmente marque o commit de merge com uma tag (`v0.1.0`, `v0.2.0`, ...) para que a fronteira do módulo fique visível no histórico do repositório, e não apenas na memória.
 
 ---
 
-## 4. Commit messages — Conventional Commits
+## 4. Mensagens de commit — Conventional Commits
 
-Format:
+Formato:
 
 ```
-<type>(<scope>): <short summary>
+<tipo>(<escopo>): <resumo curto>
 
-<optional longer body — the "why", not just the "what">
+<corpo opcional mais longo — o "porquê", não só o "o quê">
 ```
 
-Use the same `<type>` vocabulary as the branch prefixes above (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `style`). Scope should usually match a backend module from doc 02 (`identity`, `timer`, `progression`, `rooms`, `social`, `annotations`, `notifications`, `media`, `cosmetics`) or a frontend feature area.
+Use o mesmo vocabulário de `<tipo>` dos prefixos de branch acima (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `style`). O escopo geralmente deve corresponder a um módulo de backend do doc 02 (`identity`, `timer`, `progression`, `rooms`, `social`, `annotations`, `notifications`, `media`, `cosmetics`) ou a uma área de feature do frontend.
 
-Examples, grounded in this project's own domain:
+Exemplos, ancorados no domínio deste próprio projeto:
 
 ```
 feat(timer): add server-authoritative completion check (AD-2)
@@ -132,61 +132,63 @@ test(progression): add boundary tests for stage thresholds (0.199 vs 0.200)
 chore(ci): add Testcontainers step to backend pipeline
 ```
 
-A good description explains *why* a change was made when that's not obvious from the diff — "fix off-by-one" is fine for a typo; "fix streak reset at midnight because D-7 requires local-day evaluation" is much more useful six months from now.
+Uma boa descrição explica *por que* uma mudança foi feita, quando isso não é óbvio pelo diff — "corrige off-by-one" está ótimo para um erro de digitação; "corrige o reset de streak à meia-noite porque D-7 exige avaliação no dia local" é muito mais útil daqui a seis meses.
+
+> **Nota sobre idioma:** os exemplos acima estão em inglês porque é assim que eles aparecem no repositório hoje. Se o time preferir commits em português, essa é uma decisão válida — mas escolham um idioma e o mantenham, porque um histórico misturado é mais difícil de escanear do que qualquer um dos dois sozinho. O que não deve ser traduzido em nenhum caso são os `<tipo>` (`feat`, `fix`, ...), os escopos de módulo e os IDs de checklist, porque ferramentas e referências cruzadas dependem deles.
 
 ---
 
-## 5. Pull request guidelines
+## 5. Diretrizes de pull request
 
-Every PR — into `dev` or into `main` — should answer, either in the description or by being self-evident from the diff:
+Todo PR — para `dev` ou para `main` — deve responder, seja na descrição ou por ser evidente pelo diff:
 
-- **What** does this change, in one or two sentences?
-- **Why** — what problem or checklist item does it address?
-- **How was it tested?** Unit tests, manual steps, or both.
-- **Does it touch a decision recorded in the docs?** If so, which doc, and is the doc updated in this same PR?
+- **O quê** isso muda, em uma ou duas frases?
+- **Por quê** — qual problema ou item de checklist isso endereça?
+- **Como foi testado?** Testes unitários, passos manuais, ou ambos.
+- **Toca alguma decisão registrada na documentação?** Se sim, qual documento, e ele está atualizado neste mesmo PR?
 
-A minimal PR template (`.github/PULL_REQUEST_TEMPLATE.md`) helps this happen automatically rather than depending on memory — worth setting up early.
-
----
-
-## 6. CI pipeline expectations
-
-The specifics are yours to build, but at minimum, CI running on every PR into `dev` and `main` should:
-
-- Build the backend and frontend (a broken build should never be mergeable).
-- Run backend unit tests, and — once **T-4**/**Q-4** are settled — integration tests against a real Postgres via Testcontainers.
-- Run frontend unit tests for anything with real logic (`deriveStage` is the obvious first candidate).
-- Lint both codebases.
-
-CI passing is a **required status check** on both protected branches (§2) — a green checkmark is a gate, not a suggestion.
+Um template mínimo de PR (`.github/PULL_REQUEST_TEMPLATE.md`) ajuda isso a acontecer automaticamente em vez de depender da memória — vale configurar cedo.
 
 ---
 
-## 7. Good practices
+## 6. Expectativas do pipeline de CI
 
-- **Write Conventional Commits with a real description.** Future-you and your teammates are the audience, not just the compiler.
-- **Update the docs in the same PR as the change**, whenever the change is a decision, not just an implementation detail. If you resolve a checklist item (05), touch a data flow (02), or change a domain rule (03), the doc should say so by the time the PR merges — not "later."
-- **Use AI to help write tests.** Asking an assistant to draft unit tests for `deriveStage`'s boundaries, or for the XP ledger's edge cases, is a good use of the tool and a good habit for coverage you might otherwise skip.
-- **Be deliberate about how much AI writes for you.** This project exists so the team learns to build and reason about a full-stack application — the architecture decisions, the schema trade-offs, the "why does this bug happen" moments. Leaning on AI to generate large chunks of unreviewed code trades that learning away for short-term velocity. Use it to explain, to review, to test, to unblock — and make sure you can explain, unprompted, what your own code does and why it's shaped that way.
+As especificidades são de vocês, mas, no mínimo, a CI rodando em todo PR para `dev` e `main` deve:
+
+- Compilar backend e frontend (um build quebrado nunca deveria ser mergeável).
+- Rodar os testes unitários do backend e — assim que **T-4**/**Q-4** estiverem definidos — testes de integração contra um Postgres real via Testcontainers.
+- Rodar os testes unitários do frontend para qualquer coisa com lógica real (`deriveStage` é o candidato óbvio).
+- Rodar lint nas duas bases de código.
+
+Passar na CI é um **status check obrigatório** nas duas branches protegidas (§2) — o sinal verde é um portão, não uma sugestão.
 
 ---
 
-## Quick reference
+## 7. Boas práticas
+
+- **Escreva Conventional Commits com uma descrição de verdade.** O público é o seu eu futuro e seus colegas, não o compilador.
+- **Atualize a documentação no mesmo PR da mudança**, sempre que a mudança for uma decisão, e não apenas um detalhe de implementação. Se você resolver um item do checklist (05), mexer em um fluxo de dados (02) ou mudar uma regra de domínio (03), o documento deve dizer isso até o PR ser mergeado — não "depois".
+- **Use IA para ajudar a escrever testes.** Pedir a um assistente que rascunhe testes unitários para as fronteiras do `deriveStage`, ou para os casos extremos do ledger de XP, é um bom uso da ferramenta e um bom hábito para cobertura que de outra forma seria pulada.
+- **Seja deliberado sobre o quanto a IA escreve por você.** Este projeto existe para que o time aprenda a construir e raciocinar sobre uma aplicação full-stack — as decisões de arquitetura, os trade-offs de schema, os momentos de "por que esse bug acontece". Apoiar-se em IA para gerar grandes blocos de código não revisado troca esse aprendizado por velocidade de curto prazo. Use para explicar, para revisar, para testar, para destravar — e garanta que você consegue explicar, sem ser perguntado, o que o seu próprio código faz e por que ele tem a forma que tem.
+
+---
+
+## Referência rápida
 
 ```bash
-# Start new work
+# Começar um trabalho novo
 git checkout dev && git pull origin dev
-git checkout -b feat/my-feature
+git checkout -b feat/minha-feature
 
-# Stay current with dev mid-branch
+# Manter-se atualizado com a dev no meio da branch
 git fetch origin && git rebase origin/dev
 
 # Commit
 git commit -m "feat(timer): add pause tolerance window (D-2)"
 
-# Push and open a PR into dev via GitHub
+# Push e abrir um PR para dev via GitHub
 
-# After merge, clean up locally
+# Depois do merge, limpar localmente
 git checkout dev && git pull origin dev
-git branch -d feat/my-feature
+git branch -d feat/minha-feature
 ```

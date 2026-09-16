@@ -1,108 +1,110 @@
-# 01 — Product Overview
+# 01 — Visão Geral do Produto
 
-## Vision
+## Visão
 
-StarlightTimer is a Pomodoro application that treats a focus session as something you *build* rather than something you *endure*. A 25-minute cycle is rendered as the life cycle of a star: it condenses out of a cold nebula, ignites, burns steadily, swells, and detonates. Finishing the cycle produces a star. Stars accumulate into a personal sky.
+StarlightTimer é uma aplicação Pomodoro que trata uma sessão de foco como algo que você *constrói*, e não algo que você *suporta*. Um ciclo de 25 minutos é renderizado como o ciclo de vida de uma estrela: ela se condensa a partir de uma nebulosa fria, entra em ignição, queima de forma estável, incha e detona. Terminar o ciclo produz uma estrela. As estrelas se acumulam em um céu pessoal.
 
-The emotional target is **cozy, not clinical**. Deep blue-black space, supernova accents, translucent surfaces, slow ambient motion. The app should feel like a quiet observatory at night, not a productivity dashboard.
+O alvo emocional é **aconchegante, não clínico**. Espaço em azul-preto profundo, acentos de supernova, superfícies translúcidas, movimento ambiente lento. O app deve parecer um observatório silencioso à noite, não um dashboard de produtividade.
 
-## What makes it different
+## O que o diferencia
 
-Most Pomodoro tools are timers with statistics bolted on. StarlightTimer inverts the emphasis:
+A maioria das ferramentas de Pomodoro é um timer com estatísticas parafusadas em cima. O StarlightTimer inverte a ênfase:
 
-1. **The timer is the aesthetic centrepiece.** Progress is communicated by stellar evolution, not a shrinking bar.
-2. **Progression is long-horizon.** Levels, ranks, badges, and constellations reward months of use, not single sessions.
-3. **Focus is social but small.** Co-op rooms are friends-only. There is no public feed, no strangers, no global leaderboard. Competition is scoped to people you actually know.
+1. **O timer é a peça central estética.** O progresso é comunicado por evolução estelar, não por uma barra que encolhe.
+2. **A progressão é de longo prazo.** Níveis, ranks, badges e constelações recompensam meses de uso, não sessões isoladas.
+3. **O foco é social, mas pequeno.** Salas co-op são apenas entre amigos. Não há feed público, não há estranhos, não há leaderboard global. A competição se limita a pessoas que você realmente conhece.
 
 ## Personas
 
-| Persona | Need | What they use |
+| Persona | Necessidade | O que usa |
 |---|---|---|
-| **The solo student** | Structure for long study blocks, a sense of accumulation | Timer, session history, private annotations, badges |
-| **The remote worker** | Ambient co-presence, gentle accountability | Co-op rooms, reminders, music integration |
-| **The completionist** | Visible mastery and collection | Badges, constellations, ranks, screen customization |
-| **The friend group** | Light rivalry, shared study sessions | Friend ranking, co-op rooms, network hub |
+| **O estudante solo** | Estrutura para blocos longos de estudo, sensação de acúmulo | Timer, histórico de sessões, anotações privadas, badges |
+| **O trabalhador remoto** | Co-presença ambiente, cobrança gentil | Salas co-op, lembretes, integração com música |
+| **O colecionador** | Maestria visível e coleção | Badges, constelações, ranks, customização de tela |
+| **O grupo de amigos** | Rivalidade leve, sessões de estudo compartilhadas | Ranking de amigos, salas co-op, hub de rede |
 
-These are working assumptions, not validated research. See checklist item **P-2**.
+Estas são hipóteses de trabalho, não pesquisa validada. Veja o item **P-2** do checklist.
 
-## Feature catalogue
+## Catálogo de features
 
-Grouped by domain area rather than by screen. "Tier" is a recommendation, not a decision — see checklist item **P-1**.
+Agrupadas por área de domínio, e não por tela. "Tier" é uma recomendação, não uma decisão — veja o item **P-1** do checklist.
 
-### Core timer
-| Feature | Description | Tier |
+### Timer principal
+| Feature | Descrição | Tier |
 |---|---|---|
-| Focus cycle | Configurable focus duration (default 25 min) with star-lifecycle visualisation | MVP |
-| Break cycle | Short break (default 5 min), optional auto-start | MVP |
-| Session persistence | A session survives refresh, tab close, and device switch | MVP |
-| Long breaks | Longer break after N cycles (classic Pomodoro rule) | Post-MVP |
+| Ciclo de foco | Duração de foco configurável (padrão 25 min) com visualização do ciclo de vida da estrela | MVP |
+| Ciclo de pausa | Pausa curta (padrão 5 min), início automático opcional | MVP |
+| Persistência da sessão | Uma sessão sobrevive a refresh, fechamento de aba e troca de dispositivo | MVP |
+| Pausas longas | Pausa mais longa a cada N ciclos (regra clássica do Pomodoro) | Pós-MVP |
 
-### Progression & gamification
-| Feature | Description | Tier |
+### Progressão & gamificação
+| Feature | Descrição | Tier |
 |---|---|---|
-| XP and levels | Earn XP per completed cycle, level up on a curve | MVP |
-| Badges | Discrete achievements, some cumulative ("Supernova ×50"), some conditional ("Night Watch") | MVP |
-| Ranks | Named tiers above level ("Stellar Cartographer" → "Quasar") | MVP |
-| Progression tracks | Multi-goal progress bars (weekly cycles, hours, break discipline) | Post-MVP |
-| Constellations | Grouped goals that complete into a named constellation | Post-MVP |
-| Screen customization | Cosmetic themes and backgrounds unlocked by progression | Post-MVP |
+| XP e níveis | Ganha XP por ciclo concluído, sobe de nível em uma curva | MVP |
+| Badges | Conquistas discretas, algumas cumulativas ("Supernova ×50"), algumas condicionais ("Night Watch") | MVP |
+| Ranks | Tiers nomeados acima do nível ("Stellar Cartographer" → "Quasar") | MVP |
+| Trilhas de progressão | Barras de progresso de múltiplas metas (ciclos semanais, horas, disciplina de pausa) | Pós-MVP |
+| Constelações | Metas agrupadas que se completam em uma constelação nomeada | Pós-MVP |
+| Customização de tela | Temas e fundos cosméticos desbloqueados por progressão | Pós-MVP |
 
 ### Social
-| Feature | Description | Tier |
+| Feature | Descrição | Tier |
 |---|---|---|
-| Friendships | Request / accept / block, friends-only visibility | MVP |
-| Users Network Hub | Directory of friends, presence, recent activity | Post-MVP |
-| Friend ranking | Leaderboard scoped to the friend graph, periodic reset | Post-MVP |
-| Co-op timer rooms | Friends share a synchronised timer in real time | Post-MVP (highest complexity — see doc 02) |
+| Amizades | Solicitar / aceitar / bloquear, visibilidade só entre amigos | MVP |
+| Users Network Hub | Diretório de amigos, presença, atividade recente | Pós-MVP |
+| Ranking de amigos | Leaderboard limitado ao grafo de amizades, com reset periódico | Pós-MVP |
+| Salas de timer co-op | Amigos compartilham um timer sincronizado em tempo real | Pós-MVP (maior complexidade — veja doc 02) |
 
-### Personal tooling
-| Feature | Description | Tier |
+### Ferramentas pessoais
+| Feature | Descrição | Tier |
 |---|---|---|
-| Session history | Browsable log of past sessions with aggregate stats | MVP |
-| Private annotations | Notes attached to a session or a day, never visible to others | MVP |
-| Customizable reminders | Nudges to start, to take a break, to return after drifting | Post-MVP |
-| Music integration | Built-in ambience loops and/or external streaming provider | Post-MVP (licensing risk — see checklist **L-1**) |
+| Histórico de sessões | Log navegável de sessões passadas com estatísticas agregadas | MVP |
+| Anotações privadas | Notas anexadas a uma sessão ou a um dia, nunca visíveis a terceiros | MVP |
+| Lembretes customizáveis | Cutucadas para começar, para pausar, para voltar depois de se dispersar | Pós-MVP |
+| Integração com música | Loops de ambiência embutidos e/ou provedor externo de streaming | Pós-MVP (risco de licenciamento — veja **L-1** no checklist) |
 
-## Recommended MVP boundary
+## Limite de MVP recomendado
 
-Ship the smallest thing that still feels like StarlightTimer rather than a generic timer:
+Entregue a menor coisa que ainda pareça StarlightTimer, e não um timer genérico:
 
-> **Authentication + solo focus/break timer with the full star lifecycle + session persistence + session history + private annotations + XP, levels, and badges + friendships.**
+> **Autenticação + timer solo de foco/pausa com o ciclo de vida completo da estrela + persistência da sessão + histórico de sessões + anotações privadas + XP, níveis e badges + amizades.**
 
-Deliberately excluded from MVP: co-op rooms, music, reminders, cosmetics, leaderboards.
+Deliberadamente fora do MVP: salas co-op, música, lembretes, cosméticos, leaderboards.
 
-The reasoning is that the star lifecycle and the progression loop are the product's identity, and both are achievable with a plain request/response backend. Co-op rooms introduce real-time infrastructure, a second consistency model, and a large class of edge cases; adding them before the core loop is validated risks spending most of the team's budget on the feature with the least certain payoff.
+O raciocínio é que o ciclo de vida da estrela e o loop de progressão são a identidade do produto, e ambos são alcançáveis com um backend simples de request/response. Salas co-op introduzem infraestrutura de tempo real, um segundo modelo de consistência e uma classe grande de casos extremos; adicioná-las antes de validar o loop principal arrisca gastar a maior parte do orçamento do time na feature com o retorno menos garantido.
 
-## Domain glossary
+## Glossário de domínio
 
-The theme is not decoration — it's the ubiquitous language. Use these terms in code, database columns, tickets, and UI copy so that conversation, schema, and interface stay aligned.
+O tema não é decoração — é a linguagem ubíqua. Use estes termos em código, colunas de banco, tickets e textos de UI para que conversa, schema e interface permaneçam alinhados.
 
-| Term | Meaning | Neutral equivalent |
+Os termos são mantidos em inglês porque é assim que eles vão aparecer no código.
+
+| Termo | Significado | Equivalente neutro |
 |---|---|---|
-| **Star** | One successfully completed focus cycle | Completed pomodoro |
-| **Stars forged** | Lifetime count of completed focus cycles | Total completed sessions |
-| **Ignite** | Start a focus cycle | Start timer |
-| **Cycle** | One focus or break period | Interval |
-| **Stage** | One of the six visual phases of a cycle | Progress phase |
-| **Orbit** | A continuous run of active days | Streak |
-| **In orbit** | Cumulative focus time | Total focus hours |
-| **Constellation** | A named group of related goals | Achievement set |
-| **Rank** | Named tier derived from level | Tier / league |
-| **Star Log** | The session history view | History |
-| **Ambience** | Music and sound settings | Audio settings |
-| **Supernova alert** | Cycle-completion sound | Completion chime |
+| **Star** | Um ciclo de foco concluído com sucesso | Pomodoro concluído |
+| **Stars forged** | Contagem vitalícia de ciclos de foco concluídos | Total de sessões concluídas |
+| **Ignite** | Iniciar um ciclo de foco | Iniciar o timer |
+| **Cycle** | Um período de foco ou de pausa | Intervalo |
+| **Stage** | Uma das seis fases visuais de um ciclo | Fase de progresso |
+| **Orbit** | Uma sequência contínua de dias ativos | Streak |
+| **In orbit** | Tempo de foco acumulado | Total de horas de foco |
+| **Constellation** | Um grupo nomeado de metas relacionadas | Conjunto de conquistas |
+| **Rank** | Tier nomeado derivado do nível | Tier / liga |
+| **Star Log** | A tela de histórico de sessões | Histórico |
+| **Ambience** | Configurações de música e som | Configurações de áudio |
+| **Supernova alert** | Som de conclusão de ciclo | Sinal sonoro de término |
 
-### The six stages
+### Os seis estágios
 
-Taken directly from the prototype logic. Stage is a pure function of elapsed percentage — it is **derived on the client and never stored**.
+Retirados diretamente da lógica do protótipo. O estágio é uma função pura do percentual decorrido — ele é **derivado no cliente e nunca armazenado**.
 
-| Stage | Elapsed | Accent | Narrative role |
+| Estágio | Decorrido | Acento | Papel narrativo |
 |---|---|---|---|
-| Nebula | 0–20% | `#8fa8ff` | Settling in |
-| Protostar | 20–40% | `#a98bff` | Warming up |
-| Main Sequence | 40–68% | `#ffe08a` | Deep work |
-| Red Giant | 68–88% | `#ff9a7a` | Push through |
-| Supernova | 88–100% | `#ff7ad9` | Finish the thought |
-| Cooling Nebula | break cycles | `#7fd8ff` | Rest |
+| Nebula | 0–20% | `#8fa8ff` | Se acomodando |
+| Protostar | 20–40% | `#a98bff` | Esquentando |
+| Main Sequence | 40–68% | `#ffe08a` | Trabalho profundo |
+| Red Giant | 68–88% | `#ff9a7a` | Aguente firme |
+| Supernova | 88–100% | `#ff7ad9` | Termine o raciocínio |
+| Cooling Nebula | ciclos de pausa | `#7fd8ff` | Descanso |
 
-One consequence worth noting early: because stage is derived from percentage rather than absolute minutes, a user who configures a 50-minute cycle gets the same narrative arc stretched over twice the time. That is probably the desired behaviour, but it should be an explicit decision — see checklist **D-4**.
+Uma consequência que vale notar desde já: como o estágio deriva do percentual e não de minutos absolutos, um usuário que configura um ciclo de 50 minutos recebe o mesmo arco narrativo esticado pelo dobro do tempo. Esse é provavelmente o comportamento desejado, mas deve ser uma decisão explícita — veja **D-4** no checklist.

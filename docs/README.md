@@ -1,31 +1,39 @@
 # StarlightTimer
 
-A cozy, space-themed Pomodoro web application with gamified progression, co-op focus rooms, and a timer that visualises a 25-minute cycle as the life cycle of a star.
+Uma aplicação web de Pomodoro aconchegante, com tema espacial, progressão gamificada, salas de foco em co-op e um timer que visualiza um ciclo de 25 minutos como o ciclo de vida de uma estrela.
 
-**Status:** planning / pre-implementation. UI prototype exists for Homepage and Profile. Backend not started.
+**Status:** planejamento / pré-implementação. Existe protótipo de UI para as telas de Homepage e Perfil. Backend não iniciado.
 
 **Stack:** Java 21 + Spring Boot · TypeScript + React · PostgreSQL
 
 ---
 
-## Documentation index
+## Índice da documentação
 
-| Doc | What it covers | Read it when |
+| Doc | O que cobre | Leia quando |
 |---|---|---|
-| [01 — Product Overview](docs/01-product-overview.md) | Vision, personas, feature catalogue, MVP boundary, domain glossary | You're new to the project |
-| [02 — Architecture](docs/02-architecture.md) | System context, containers, module map, key decisions and trade-offs, core data flows | You're about to write backend code |
-| [03 — Domain Model](docs/03-domain-model.md) | Candidate entities, relationships, and open modelling questions — input for the team's ER session | You're designing the schema |
-| [04 — Frontend & Design System](docs/04-frontend-design-system.md) | Design tokens extracted from the prototype, screen inventory, component decomposition | You're building UI |
-| [05 — Planning Checklist](docs/05-planning-checklist.md) | Every decision still open, grouped and prioritised | Every planning meeting |
+| [01 — Visão Geral do Produto](docs/01-product-overview.md) | Visão, personas, catálogo de features, limite do MVP, glossário de domínio | Você é novo no projeto |
+| [02 — Arquitetura](docs/02-architecture.md) | Contexto do sistema, containers, mapa de módulos, decisões-chave e trade-offs, fluxos de dados principais | Você vai escrever código de backend |
+| [03 — Modelo de Domínio](docs/03-domain-model.md) | Entidades candidatas, relacionamentos e questões de modelagem em aberto — insumo para a sessão de ER do time | Você vai projetar o schema |
+| [04 — Frontend & Design System](docs/04-frontend-design-system.md) | Design tokens extraídos do protótipo, inventário de telas, decomposição de componentes | Você vai construir UI |
+| [05 — Checklist de Planejamento](docs/05-planning-checklist.md) | Toda decisão ainda em aberto, agrupada e priorizada | Toda reunião de planejamento |
+| [06 — Fluxo de Git & Colaboração](docs/06-git-workflow.md) | Modelo de branches, proteção de branches, ciclo de desenvolvimento, commits, PRs, CI | Antes da sua primeira branch |
+| [07 — Ideias Adicionais de Workflow](docs/07-workflow-additional-ideas.md) | Sugestões opcionais de automação e gestão | O processo atual começou a doer em algum ponto |
 
-## How to use these docs
+## Como usar estes documentos
 
-These are **macro-level** documents. They describe shape, boundaries, and unresolved questions — not implementation detail. They deliberately stop short of API signatures, table DDL, and component props, because those decisions belong to the team and haven't been made yet.
+Estes são documentos de **nível macro**. Eles descrevem forma, fronteiras e questões não resolvidas — não detalhes de implementação. Eles param deliberadamente antes de assinaturas de API, DDL de tabelas e props de componentes, porque essas decisões pertencem ao time e ainda não foram tomadas.
 
-Anything written as a **recommendation** is a suggestion with reasoning attached, not a settled decision. Anything in [05 — Planning Checklist](docs/05-planning-checklist.md) is an acknowledged gap.
+Tudo escrito como **recomendação** é uma sugestão com o raciocínio anexado, não uma decisão fechada. Tudo que está no [05 — Checklist de Planejamento](docs/05-planning-checklist.md) é uma lacuna reconhecida.
 
-## Conventions
+## Convenções
 
-- Domain language is thematic and load-bearing. A completed focus session is a *star forged*; a streak is an *orbit*. See the glossary in doc 01 and use these terms consistently in code, tickets, and UI copy.
-- Diagrams are Mermaid, rendered inline by GitHub/GitLab.
-- Docs live next to the code and are updated in the same pull request as the change they describe.
+- A linguagem de domínio é temática e estrutural. Uma sessão de foco concluída é uma *star forged*; uma sequência de dias ativos é uma *orbit*. Veja o glossário no doc 01 e use esses termos de forma consistente em código, tickets e textos de UI.
+- Diagramas são em Mermaid, renderizados inline pelo GitHub/GitLab.
+- A documentação vive ao lado do código e é atualizada no mesmo pull request da mudança que descreve.
+
+## Nota sobre esta tradução
+
+Esta é a versão em português do conjunto de documentos. Os nomes dos arquivos e todos os IDs de checklist (**P-1**, **D-7**, **AD-2**, ...) foram mantidos idênticos à versão em inglês, para que referências em tickets, commits e conversas continuem funcionando nas duas versões.
+
+Os termos do glossário temático (*star*, *ignite*, *orbit*, *stars forged*) foram mantidos em inglês de propósito: eles são a linguagem ubíqua que vai aparecer em nomes de classes, colunas de banco e eventos de domínio. Traduzi-los aqui quebraria a ligação entre a documentação e o código. Se o texto da **interface** deve ser em português é uma decisão separada — veja **F-12** no checklist.

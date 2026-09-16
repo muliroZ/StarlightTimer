@@ -1,112 +1,112 @@
-# 02 — Architecture
+# 02 — Arquitetura
 
-Macro-level view of how StarlightTimer is put together and why. Implementation detail lives in code and in per-module READMEs.
+Visão de nível macro de como o StarlightTimer é montado e por quê. Detalhes de implementação vivem no código e nos READMEs de cada módulo.
 
-## Goals and constraints
+## Objetivos e restrições
 
-**Goals**
-- One deployable unit for as long as possible. The team is small and the traffic profile is modest.
-- Clear internal boundaries so that a module could be extracted later without archaeology.
-- Schema is the source of truth (database-first), and the code conforms to it.
-- Cognitive complexity stays low. Abstractions are introduced when a second concrete case appears, not in anticipation of one.
+**Objetivos**
+- Uma única unidade implantável pelo maior tempo possível. O time é pequeno e o perfil de tráfego é modesto.
+- Fronteiras internas claras, de modo que um módulo possa ser extraído depois sem arqueologia.
+- O schema é a fonte da verdade (database-first), e o código se conforma a ele.
+- A complexidade cognitiva permanece baixa. Abstrações são introduzidas quando um segundo caso concreto aparece, não em antecipação a um.
 
-**Constraints**
-- Java + Spring Boot backend, TypeScript + React frontend, PostgreSQL.
-- Timer accuracy matters, because completed cycles feed a competitive ranking. The system cannot trust the client's word about elapsed time.
-- Co-op rooms require real-time bidirectional communication, which is a different interaction model from the rest of the app.
+**Restrições**
+- Backend em Java + Spring Boot, frontend em TypeScript + React, PostgreSQL.
+- A precisão do timer importa, porque ciclos concluídos alimentam um ranking competitivo. O sistema não pode confiar na palavra do cliente sobre o tempo decorrido.
+- Salas co-op exigem comunicação bidirecional em tempo real, que é um modelo de interação diferente do resto do app.
 
-## System context
+## Contexto do sistema
 
 ```mermaid
 graph TB
-    User["Focus user<br/><i>student / remote worker</i>"]
-    Friend["Friend<br/><i>same friend graph</i>"]
+    User["Usuário de foco<br/><i>estudante / trabalhador remoto</i>"]
+    Friend["Amigo<br/><i>mesmo grafo de amizades</i>"]
 
-    SLT["<b>StarlightTimer</b><br/>Pomodoro web application<br/>with gamified progression"]
+    SLT["<b>StarlightTimer</b><br/>aplicação web Pomodoro<br/>com progressão gamificada"]
 
-    Music["Music provider<br/><i>e.g. Spotify Web API</i>"]
-    Push["Web Push service<br/><i>browser push gateway</i>"]
-    Mail["Transactional email<br/><i>verification, resets</i>"]
-    IdP["OAuth identity provider<br/><i>optional social login</i>"]
+    Music["Provedor de música<br/><i>ex.: Spotify Web API</i>"]
+    Push["Serviço de Web Push<br/><i>gateway de push do navegador</i>"]
+    Mail["E-mail transacional<br/><i>verificação, redefinições</i>"]
+    IdP["Provedor de identidade OAuth<br/><i>login social opcional</i>"]
 
-    User -->|"runs focus cycles,<br/>views progression"| SLT
-    Friend -->|"joins co-op rooms,<br/>appears in ranking"| SLT
-    SLT -->|"playback control,<br/>OAuth token exchange"| Music
-    SLT -->|"reminder notifications"| Push
-    SLT -->|"account emails"| Mail
-    SLT -->|"delegated sign-in"| IdP
+    User -->|"executa ciclos de foco,<br/>consulta progressão"| SLT
+    Friend -->|"entra em salas co-op,<br/>aparece no ranking"| SLT
+    SLT -->|"controle de reprodução,<br/>troca de token OAuth"| Music
+    SLT -->|"notificações de lembrete"| Push
+    SLT -->|"e-mails de conta"| Mail
+    SLT -->|"login delegado"| IdP
 ```
 
-Every external dependency above except transactional email is optional for the MVP. Keeping them optional is deliberate: none of them should sit on the critical path of starting a timer.
+Toda dependência externa acima, exceto e-mail transacional, é opcional para o MVP. Mantê-las opcionais é deliberado: nenhuma delas deve estar no caminho crítico de iniciar um timer.
 
 ## Containers
 
 ```mermaid
 graph TB
-    subgraph Client["Browser"]
-        SPA["<b>React SPA</b><br/>TypeScript, Vite<br/>renders star lifecycle,<br/>runs local countdown"]
-        SW["<b>Service Worker</b><br/>push notifications,<br/>offline shell"]
+    subgraph Client["Navegador"]
+        SPA["<b>SPA React</b><br/>TypeScript, Vite<br/>renderiza o ciclo da estrela,<br/>roda a contagem local"]
+        SW["<b>Service Worker</b><br/>notificações push,<br/>shell offline"]
     end
 
-    subgraph Server["Application server"]
-        API["<b>REST API</b><br/>Spring Web<br/>sessions, progression,<br/>social, annotations"]
-        WS["<b>Realtime Gateway</b><br/>Spring WebSocket + STOMP<br/>co-op room sync"]
-        SCHED["<b>Scheduler</b><br/>Spring Scheduling<br/>reminders, leaderboard rollups,<br/>streak evaluation"]
+    subgraph Server["Servidor de aplicação"]
+        API["<b>API REST</b><br/>Spring Web<br/>sessões, progressão,<br/>social, anotações"]
+        WS["<b>Gateway de Tempo Real</b><br/>Spring WebSocket + STOMP<br/>sincronização de salas co-op"]
+        SCHED["<b>Scheduler</b><br/>Spring Scheduling<br/>lembretes, consolidação de leaderboard,<br/>avaliação de streaks"]
     end
 
-    DB[("<b>PostgreSQL</b><br/>authoritative state<br/>+ Flyway migrations")]
-    CACHE[("<b>Redis</b><br/><i>optional</i><br/>room state, presence,<br/>STOMP relay")]
+    DB[("<b>PostgreSQL</b><br/>estado autoritativo<br/>+ migrations Flyway")]
+    CACHE[("<b>Redis</b><br/><i>opcional</i><br/>estado de sala, presença,<br/>relay STOMP")]
 
     SPA -->|"HTTPS / JSON"| API
     SPA <-->|"WebSocket / STOMP"| WS
-    SW -.->|"push subscription"| API
+    SW -.->|"inscrição de push"| API
     API --> DB
     WS --> DB
     WS -.-> CACHE
     SCHED --> DB
-    SCHED -.->|"push dispatch"| SW
+    SCHED -.->|"disparo de push"| SW
 ```
 
-**Redis is marked optional and should stay that way until a concrete need appears.** It becomes necessary only when you run more than one application instance and co-op rooms must span instances, or when presence updates become too chatty for the database. Single-instance deployment with in-memory room state is the correct starting point.
+**O Redis está marcado como opcional e deve permanecer assim até que uma necessidade concreta apareça.** Ele só se torna necessário quando você roda mais de uma instância da aplicação e as salas co-op precisam atravessar instâncias, ou quando as atualizações de presença ficam pesadas demais para o banco. Deploy de instância única com estado de sala em memória é o ponto de partida correto.
 
-## Backend module map
+## Mapa de módulos do backend
 
-A **modular monolith**: one Spring Boot application, packaged by feature, with modules communicating through published interfaces rather than reaching into each other's internals.
+Um **monólito modular**: uma aplicação Spring Boot, empacotada por feature, com módulos se comunicando através de interfaces publicadas em vez de alcançar as entranhas uns dos outros.
 
 ```mermaid
 graph LR
-    subgraph App["Spring Boot application"]
+    subgraph App["Aplicação Spring Boot"]
         direction TB
-        IDENTITY["<b>identity</b><br/>accounts, auth,<br/>sessions/tokens"]
-        TIMER["<b>timer</b><br/>focus sessions,<br/>presets, history"]
-        PROG["<b>progression</b><br/>XP, levels, ranks,<br/>badges, tracks"]
-        SOCIAL["<b>social</b><br/>friendships, hub,<br/>ranking"]
-        ROOMS["<b>rooms</b><br/>co-op timer rooms,<br/>realtime sync"]
-        NOTES["<b>annotations</b><br/>private notes"]
-        NOTIFY["<b>notifications</b><br/>reminders, push,<br/>preferences"]
-        MEDIA["<b>media</b><br/>ambience, external<br/>music linkage"]
-        COSMET["<b>cosmetics</b><br/>themes, unlocks"]
+        IDENTITY["<b>identity</b><br/>contas, autenticação,<br/>sessões/tokens"]
+        TIMER["<b>timer</b><br/>sessões de foco,<br/>presets, histórico"]
+        PROG["<b>progression</b><br/>XP, níveis, ranks,<br/>badges, trilhas"]
+        SOCIAL["<b>social</b><br/>amizades, hub,<br/>ranking"]
+        ROOMS["<b>rooms</b><br/>salas de timer co-op,<br/>sincronização em tempo real"]
+        NOTES["<b>annotations</b><br/>notas privadas"]
+        NOTIFY["<b>notifications</b><br/>lembretes, push,<br/>preferências"]
+        MEDIA["<b>media</b><br/>ambiência, vínculo com<br/>música externa"]
+        COSMET["<b>cosmetics</b><br/>temas, desbloqueios"]
     end
 
-    TIMER -->|"session completed<br/>event"| PROG
+    TIMER -->|"evento de sessão<br/>concluída"| PROG
     ROOMS --> TIMER
     PROG --> COSMET
     SOCIAL --> PROG
     NOTES --> TIMER
     NOTIFY --> TIMER
-    IDENTITY -.->|"user identity"| TIMER
+    IDENTITY -.->|"identidade do usuário"| TIMER
     IDENTITY -.-> SOCIAL
 ```
 
-Suggested package layout:
+Layout de pacotes sugerido:
 
 ```
 com.starlighttimer
 ├── identity/
-│   ├── api/          ← controllers + DTOs (public surface)
-│   ├── domain/       ← entities + business rules
-│   ├── persistence/  ← repositories
-│   └── IdentityFacade.java   ← the only type other modules may import
+│   ├── api/          ← controllers + DTOs (superfície pública)
+│   ├── domain/       ← entidades + regras de negócio
+│   ├── persistence/  ← repositórios
+│   └── IdentityFacade.java   ← o único tipo que outros módulos podem importar
 ├── timer/
 ├── progression/
 ├── social/
@@ -115,174 +115,174 @@ com.starlighttimer
 ├── notifications/
 ├── media/
 ├── cosmetics/
-└── shared/           ← cross-cutting: error handling, clock, config, security filters
+└── shared/           ← transversal: tratamento de erros, clock, config, filtros de segurança
 ```
 
-Two rules keep this honest:
+Duas regras mantêm isso honesto:
 
-1. **A module may only import another module's facade.** Never its entities, repositories, or internal services.
-2. **`shared` may not import any feature module.** If something in `shared` needs domain knowledge, it belongs in a feature module instead.
+1. **Um módulo só pode importar a facade de outro módulo.** Nunca suas entidades, repositórios ou serviços internos.
+2. **`shared` não pode importar nenhum módulo de feature.** Se algo em `shared` precisa de conhecimento de domínio, esse algo pertence a um módulo de feature.
 
-If those two rules hold, extracting any module into its own service later is a mechanical refactor rather than a rewrite.
+Se essas duas regras se mantiverem, extrair qualquer módulo para um serviço próprio depois é uma refatoração mecânica, e não uma reescrita.
 
-## Key decisions and trade-offs
+## Decisões-chave e trade-offs
 
-### AD-1 — Modular monolith, not microservices
+### AD-1 — Monólito modular, não microsserviços
 
-You mentioned wanting "micro-architecture principles, but only when clearly necessary." Concretely: adopt the *boundaries* of microservices and none of the *distribution*.
+Vocês mencionaram querer "princípios de micro-arquitetura, mas apenas quando claramente necessário". Concretamente: adote as *fronteiras* dos microsserviços e nada da *distribuição*.
 
-| | Modular monolith (chosen) | Microservices |
+| | Monólito modular (escolhido) | Microsserviços |
 |---|---|---|
-| Deployment | One artifact, one pipeline | N artifacts, N pipelines |
-| Transactions | Local ACID across features | Sagas, eventual consistency |
-| Debugging | One stack trace | Distributed tracing required |
-| Cost of a wrong boundary | Move a package | Network migration + data migration |
-| Team overhead | Low | High for a small team |
+| Deploy | Um artefato, um pipeline | N artefatos, N pipelines |
+| Transações | ACID local entre features | Sagas, consistência eventual |
+| Depuração | Um stack trace | Tracing distribuído obrigatório |
+| Custo de uma fronteira errada | Mover um pacote | Migração de rede + migração de dados |
+| Overhead de time | Baixo | Alto para um time pequeno |
 
-The features most likely to need independent scaling are co-op rooms and notifications. Both are already isolated as modules, so if load ever justifies it, they are the extraction candidates.
+As features com maior probabilidade de precisar de escala independente são salas co-op e notificações. Ambas já estão isoladas como módulos, então, se a carga algum dia justificar, elas são as candidatas à extração.
 
-**Revisit when:** you have more than roughly eight engineers, or the realtime gateway's resource profile diverges sharply from the REST API's.
+**Revisitar quando:** o time passar de aproximadamente oito pessoas de engenharia, ou o perfil de recursos do gateway de tempo real divergir fortemente do da API REST.
 
-### AD-2 — Server-authoritative timing, client-side rendering
+### AD-2 — Tempo autoritativo no servidor, renderização no cliente
 
-The client runs a `setInterval` countdown for smooth visuals (as the prototype already does). The server independently records timestamps and is the sole judge of whether a cycle completed.
-
-```
-Client:  renders 25:00 → 00:00 smoothly, updates star stage
-Server:  stores startedAt; on completion, verifies
-         (now - startedAt) >= plannedDuration - tolerance
-```
-
-This matters because completed cycles produce XP, which produces ranking. A purely client-reported "I finished!" is trivially forged by anyone with a browser console. Given that ranking is friends-only and low-stakes, the goal is not airtight anti-cheat — it's making casual cheating require deliberate effort rather than curiosity.
-
-**Trade-off:** the server must tolerate clock skew, network delay, and legitimately backgrounded tabs (browsers throttle timers in inactive tabs, so client and server *will* drift). A tolerance window of a few seconds, plus reconciling against server timestamps on reconnect, handles this. Specifics are open — see checklist **D-3**.
-
-### AD-3 — Sessions are records, not in-flight objects
-
-A focus session is written to the database when it *starts*, not when it ends.
+O cliente roda uma contagem regressiva com `setInterval` para ter visual suave (como o protótipo já faz). O servidor registra timestamps de forma independente e é o único juiz de se um ciclo foi concluído.
 
 ```
-POST /sessions        → creates row: status=RUNNING, startedAt=now
+Cliente: renderiza 25:00 → 00:00 suavemente, atualiza o estágio da estrela
+Servidor: armazena startedAt; ao concluir, verifica
+          (now - startedAt) >= plannedDuration - tolerância
+```
+
+Isso importa porque ciclos concluídos produzem XP, que produz ranking. Um "terminei!" reportado puramente pelo cliente é trivialmente forjável por qualquer pessoa com um console de navegador. Dado que o ranking é apenas entre amigos e de baixo risco, o objetivo não é anti-cheat hermético — é fazer com que trapacear casualmente exija esforço deliberado em vez de curiosidade.
+
+**Trade-off:** o servidor precisa tolerar desvio de relógio, latência de rede e abas legitimamente em segundo plano (navegadores limitam timers em abas inativas, então cliente e servidor *vão* divergir). Uma janela de tolerância de alguns segundos, mais reconciliação contra os timestamps do servidor na reconexão, resolve isso. As especificidades estão em aberto — veja **D-3** no checklist.
+
+### AD-3 — Sessões são registros, não objetos em voo
+
+Uma sessão de foco é escrita no banco quando ela *começa*, não quando termina.
+
+```
+POST /sessions        → cria a linha: status=RUNNING, startedAt=now
 PATCH /sessions/{id}  → status=PAUSED | RUNNING | COMPLETED | ABANDONED
 ```
 
-This is what makes "close the tab and come back" work, makes multi-device continuation possible, and gives the co-op room something concrete to synchronise against. It also means abandoned sessions are visible data rather than silence, which is useful for both the user's history and for product analytics.
+É isso que faz "fechar a aba e voltar" funcionar, que torna possível continuar em múltiplos dispositivos e que dá à sala co-op algo concreto contra o que sincronizar. Também significa que sessões abandonadas são dados visíveis em vez de silêncio, o que é útil tanto para o histórico do usuário quanto para análise de produto.
 
-**Trade-off:** you accumulate rows for sessions nobody finished, and you need a scheduled job to mark long-stale `RUNNING` sessions as `ABANDONED`.
+**Trade-off:** você acumula linhas de sessões que ninguém terminou, e precisa de um job agendado para marcar sessões `RUNNING` muito antigas como `ABANDONED`.
 
-### AD-4 — Database-first, enforced through migrations
+### AD-4 — Database-first, garantido por migrations
 
-Database-first with Spring Boot has one specific failure mode worth naming up front: `spring.jpa.hibernate.ddl-auto` set to anything other than `validate` silently makes the *entities* the source of truth, which is the opposite of what you want.
+Database-first com Spring Boot tem um modo de falha específico que vale nomear logo de cara: `spring.jpa.hibernate.ddl-auto` configurado com qualquer coisa diferente de `validate` silenciosamente torna as *entidades* a fonte da verdade, que é o oposto do que vocês querem.
 
-The workflow:
+O fluxo:
 
 ```
-1. Team designs / revises the ER diagram
-2. Hand-write a Flyway migration (V__x.sql) implementing the change
-3. Migration runs on startup and in CI
-4. JPA entities are written to match, with ddl-auto: validate
-5. Application refuses to boot if entities and schema disagree
+1. O time projeta / revisa o diagrama ER
+2. Escreve à mão uma migration Flyway (V__x.sql) implementando a mudança
+3. A migration roda no startup e na CI
+4. As entidades JPA são escritas para casar com o schema, com ddl-auto: validate
+5. A aplicação se recusa a subir se entidades e schema discordarem
 ```
 
-`validate` turns schema drift from a production surprise into a startup failure on a developer's machine.
+`validate` transforma divergência de schema de uma surpresa em produção em uma falha de startup na máquina de um dev.
 
-### AD-5 — Progression is event-driven inside the monolith
+### AD-5 — Progressão é orientada a eventos dentro do monólito
 
-When a session completes, the `timer` module publishes a domain event. The `progression` module listens and awards XP, evaluates badges, and updates tracks.
+Quando uma sessão é concluída, o módulo `timer` publica um evento de domínio. O módulo `progression` escuta e concede XP, avalia badges e atualiza trilhas.
 
 ```
 timer.SessionCompleted → progression.onSessionCompleted()
-                             ├── award XP (write to xp_ledger)
-                             ├── recompute level & rank
-                             ├── evaluate badge criteria
-                             └── update progression tracks
+                             ├── concede XP (escreve em xp_ledger)
+                             ├── recalcula nível e rank
+                             ├── avalia critérios de badges
+                             └── atualiza trilhas de progressão
 ```
 
-Use Spring's `ApplicationEventPublisher` with `@TransactionalEventListener`. No message broker, no infrastructure. The reason to bother with events at all rather than a direct call is that badge criteria will grow — every new badge is a new listener rule, and you don't want the timer module to know about badges.
+Use o `ApplicationEventPublisher` do Spring com `@TransactionalEventListener`. Sem message broker, sem infraestrutura. A razão de usar eventos em vez de uma chamada direta é que os critérios de badges vão crescer — cada badge novo é uma nova regra de listener, e vocês não querem que o módulo timer saiba sobre badges.
 
-**Trade-off:** in-process events are invisible in stack traces and easy to lose track of. Keep them few and named after business facts (`SessionCompleted`, `FriendshipAccepted`), never after technical operations.
+**Trade-off:** eventos in-process são invisíveis em stack traces e fáceis de perder de vista. Mantenha poucos e nomeados a partir de fatos de negócio (`SessionCompleted`, `FriendshipAccepted`), nunca de operações técnicas.
 
-### AD-6 — XP as an append-only ledger
+### AD-6 — XP como um ledger append-only
 
-Store individual XP awards as rows, not a running total on the user.
+Armazene concessões individuais de XP como linhas, não como um total acumulado no usuário.
 
-| Approach | Recompute history | Show "where did my XP come from" | Fix a bug in the formula |
+| Abordagem | Recalcular histórico | Mostrar "de onde veio meu XP" | Corrigir um bug na fórmula |
 |---|---|---|---|
-| Counter column | Impossible | Impossible | Data is permanently wrong |
-| Ledger (chosen) | Replay | Query the ledger | Replay with new formula |
+| Coluna contador | Impossível | Impossível | O dado fica permanentemente errado |
+| Ledger (escolhido) | Reprocessar | Consultar o ledger | Reprocessar com a nova fórmula |
 
-Cache the total on the user row for read performance if profile loads get slow, but treat the ledger as truth.
+Faça cache do total na linha do usuário se o carregamento do perfil ficar lento, mas trate o ledger como a verdade.
 
-## Core data flows
+## Fluxos de dados principais
 
-### Solo focus session
+### Sessão de foco solo
 
 ```mermaid
 sequenceDiagram
-    participant U as User
-    participant C as React SPA
-    participant A as REST API
+    participant U as Usuário
+    participant C as SPA React
+    participant A as API REST
     participant D as PostgreSQL
-    participant P as Progression
+    participant P as Progressão
 
-    U->>C: Click "Ignite"
+    U->>C: Clica em "Ignite"
     C->>A: POST /sessions {type: FOCUS, plannedMinutes: 25}
     A->>D: INSERT session (status=RUNNING, startedAt=now)
     A-->>C: {id, startedAt, serverTime}
-    Note over C: local countdown starts,<br/>anchored to serverTime
-    loop every second
-        C->>C: recompute elapsed %, derive stage, repaint
+    Note over C: contagem local inicia,<br/>ancorada em serverTime
+    loop a cada segundo
+        C->>C: recalcula % decorrido, deriva estágio, repinta
     end
-    Note over C: reaches 00:00
+    Note over C: chega em 00:00
     C->>A: PATCH /sessions/{id} {status: COMPLETED}
-    A->>A: verify elapsed >= planned - tolerance
+    A->>A: verifica decorrido >= planejado - tolerância
     A->>D: UPDATE session
-    A->>P: publish SessionCompleted
-    P->>D: append XP, evaluate badges, update tracks
+    A->>P: publica SessionCompleted
+    P->>D: acrescenta XP, avalia badges, atualiza trilhas
     A-->>C: {session, xpAwarded, newBadges, levelUp}
-    C->>U: Supernova animation + any badge unlocks
+    C->>U: animação de Supernova + badges desbloqueados
 ```
 
-Note that the client anchors its countdown to `serverTime`, not to its own clock. This costs nothing and eliminates an entire category of bug reports from users with skewed system clocks.
+Note que o cliente ancora sua contagem em `serverTime`, não no próprio relógio. Isso não custa nada e elimina uma categoria inteira de relatos de bug vindos de usuários com relógio de sistema desajustado.
 
-### Co-op room (post-MVP)
+### Sala co-op (pós-MVP)
 
 ```mermaid
 sequenceDiagram
     participant H as Host
-    participant G as Realtime Gateway
-    participant M as Member
+    participant G as Gateway de Tempo Real
+    participant M as Membro
     participant D as PostgreSQL
 
     H->>G: CONNECT + SUBSCRIBE /topic/room/{id}
     M->>G: CONNECT + SUBSCRIBE /topic/room/{id}
     G-->>H: member_joined
     H->>G: SEND /app/room/{id}/start
-    G->>D: INSERT room session (startedAt=now)
+    G->>D: INSERT sessão da sala (startedAt=now)
     G-->>H: cycle_started {startedAt, duration, serverTime}
     G-->>M: cycle_started {startedAt, duration, serverTime}
-    Note over H,M: both clients render the same<br/>countdown derived from startedAt
-    Note over M: connection drops
-    M->>G: reconnect + SUBSCRIBE
+    Note over H,M: ambos os clientes renderizam a mesma<br/>contagem derivada de startedAt
+    Note over M: a conexão cai
+    M->>G: reconecta + SUBSCRIBE
     G-->>M: room_state {startedAt, duration, serverTime, members}
-    Note over M: recomputes position in cycle,<br/>resumes mid-star
+    Note over M: recalcula a posição no ciclo,<br/>retoma no meio da estrela
 ```
 
-The important property: the server broadcasts a **start timestamp and a duration**, never a tick or a remaining-seconds value. Clients derive their own countdown from those two values. This makes the protocol nearly free (a handful of messages per session rather than one per second) and makes reconnection trivially correct — a rejoining client computes exactly the same position as everyone else.
+A propriedade importante: o servidor transmite um **timestamp de início e uma duração**, nunca um tick ou um valor de segundos restantes. Os clientes derivam a própria contagem a partir desses dois valores. Isso torna o protocolo quase gratuito (um punhado de mensagens por sessão, em vez de uma por segundo) e torna a reconexão trivialmente correta — um cliente que volta calcula exatamente a mesma posição que todo mundo.
 
-## Cross-cutting concerns
+## Preocupações transversais
 
-| Concern | Approach | Owner |
+| Preocupação | Abordagem | Dono |
 |---|---|---|
-| Authentication | Spring Security; token strategy undecided (**A-1**) | `identity` |
-| Authorisation | Friends-only visibility enforced in service layer, never in the UI alone | each module |
-| Error format | Single RFC 9457 problem-detail shape across all endpoints | `shared` |
-| Time | Inject a `Clock` bean everywhere; never call `Instant.now()` directly — this is what makes progression logic testable | `shared` |
-| Time zones | Store UTC; user's IANA zone on the profile; streaks evaluated in the user's local day (**D-6**) | `shared` |
-| Validation | Bean Validation on DTOs, invariants in domain objects | each module |
-| Observability | Spring Boot Actuator + structured JSON logs; tracing deferred | `shared` |
-| Migrations | Flyway, versioned, forward-only | `shared` |
+| Autenticação | Spring Security; estratégia de token indefinida (**A-1**) | `identity` |
+| Autorização | Visibilidade apenas entre amigos aplicada na camada de serviço, nunca só na UI | cada módulo |
+| Formato de erro | Um único formato problem-detail RFC 9457 em todos os endpoints | `shared` |
+| Tempo | Injete um bean `Clock` em todo lugar; nunca chame `Instant.now()` diretamente — é isso que torna a lógica de progressão testável | `shared` |
+| Fusos horários | Armazene em UTC; zona IANA do usuário no perfil; streaks avaliados no dia local do usuário (**D-6**) | `shared` |
+| Validação | Bean Validation nos DTOs, invariantes nos objetos de domínio | cada módulo |
+| Observabilidade | Spring Boot Actuator + logs estruturados em JSON; tracing adiado | `shared` |
+| Migrations | Flyway, versionadas, somente para frente | `shared` |
 
-## What is deliberately *not* decided here
+## O que deliberadamente *não* está decidido aqui
 
-Hosting, CI provider, repository layout, API versioning scheme, state management library, and testing framework choices are all open. They're tracked in [05 — Planning Checklist](05-planning-checklist.md) rather than pre-empted here, because they depend on team preference and budget more than on architecture.
+Hospedagem, provedor de CI, layout do repositório, esquema de versionamento de API, biblioteca de gerenciamento de estado e escolhas de framework de teste estão todos em aberto. Eles são rastreados no [05 — Checklist de Planejamento](05-planning-checklist.md) em vez de serem antecipados aqui, porque dependem mais da preferência do time e do orçamento do que da arquitetura.
