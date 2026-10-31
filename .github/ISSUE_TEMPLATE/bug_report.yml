@@ -1,0 +1,43 @@
+name: 🐛 Relatório de Bug
+description: Utilize esse modelo para relatar um bug
+title: "[bug] "
+labels: ["bug", "needs_triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Formulário de Bugs
+        Preencha os campos abaixo com as informações necessárias.
+
+  - type: dropdown
+    id: associated_module
+    attributes:
+      label: Qual módulo está associado?
+      options:
+        - backend
+        - frontend
+        - infra (docker, db, ...)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: bug_priority
+    attributes:
+      label: Nível de prioridade
+      description: O quão crítico é este bug?
+      options:
+        - baixa
+        - média
+        - alta
+        - crítica
+    validations:
+      required: true
+
+  - type: textarea
+    id: bug_content
+    attributes:
+      label: Do que se trata?
+      description: Conte-nos mais sobre o bug em questão
+      placeholder: Era uma vez...
+    validations:
+      required: true

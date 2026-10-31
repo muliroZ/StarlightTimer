@@ -1,0 +1,74 @@
+name: 📜 Tarefa Técnica
+description: Formulário para definição de tarefas (chore, docs, test, style, refactor, ...)
+title: "[chore] "
+labels: ["task", "needs_triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Formulário de Tarefas
+        Preencha os campos abaixo com as informações necessárias
+
+  - type: dropdown
+    id: task_type
+    attributes:
+      label: Qual o tipo da tarefa?
+      description: "Dica: Segue o padrão dos Conventional Commits"
+      options:
+        - chore
+        - docs
+        - test
+        - style
+        - refactor
+    validations:
+      required: true
+
+  - type: dropdown
+    id: associated_module
+    attributes:
+      label: Qual módulo está associado?
+      options:
+        - backend
+        - frontend
+        - infra (docker, db, ...)
+        - repositório
+    validations:
+      required: true
+
+  - type: dropdown
+    id: task_priority
+    attributes:
+      label: Nível de prioridade
+      description: O quão importante é esta tarefa?
+      options:
+        - baixa
+        - média
+        - alta
+        - essencial
+    validations:
+      required: true
+
+  - type: textarea
+    id: task_content
+    attributes:
+      label: O quê e por quê?
+      description: O que deve ser feito e por quê deve ser feito?
+      placeholder: Atualização na documentação do módulo X...
+    validations:
+      required: true
+
+  - type: textarea
+    id: task_criteria
+    attributes:
+      label: Critérios de conclusão
+      description: Especifique os critérios para o resultado
+      value: |
+        - [ ] 
+        - [ ]
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        Branch sugerida: `<tipo da tarefa>/<numero da issue>-<descrição curta>`
