@@ -1,0 +1,80 @@
+name: ✨ Nova Feature
+description: Formulário para definições de novas funcionalidades
+title: "[feat] "
+labels: ["feature", "needs_triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ### Formulário de Features
+        Preencha os campos abaixo com as informações necessárias
+
+  - type: dropdown
+    id: associated_module
+    attributes:
+      label: Qual módulo está associado?
+      options:
+        - backend
+        - frontend
+        - infra (docker, db, ...)
+        - repositório
+    validations:
+      required: true
+
+  - type: dropdown
+    id: feature_priority
+    attributes:
+      label: Nível de prioridade
+      description: O quão importante é esta feature?
+      options:
+        - baixa
+        - média
+        - alta
+        - essencial
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature_reason
+    attributes:
+      label: Qual a motivação dessa feature?
+      placeholder: Porque ela resolve X ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature_content
+    attributes:
+      label: Como seria essa funcionalidade?
+      description: Como você imagina o comportamento dessa funcionalidade?
+      placeholder: |
+        Você pode utilizar o modelo de User Stories (Como <persona>, eu quero <funcionalidade>, para <motivo>),
+        fica mais fácil de elaborar e entender
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature_criteria
+    attributes:
+      label: Critérios de Aceitação
+      description: Como podemos saber se estamos no caminho certo?
+      value: |
+        - [ ] 
+        - [ ] 
+        - [ ]
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Antes de enviar
+      description: Confirme os itens abaixo
+      options:
+        - label: Pesquisei nas issues abertas e não encontrei uma solicitação duplicada.
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        Branch sugerida: `feat/<numero da issue>-<descrição curta>`
