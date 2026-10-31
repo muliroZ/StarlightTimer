@@ -2,20 +2,42 @@ module.exports = async ({ github, context, core }) => {
     const pr = context.payload.pull_request;
     const title = pr.title || "";
     const body = pr.body || "";
+    let baseBranch = pr.base.ref;
+    const headBranch = pr.head.ref;
     const { owner, repo } = context.repo
     const errors = [];
 
-    const conventionalRegex = /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9_-]+\))?!?: .+/i;
-    if (!conventionalRegex.test(title)) {
-        errors.push("❌ **Título fora do padrão:** Use Conventional Commits (ex: `feat: ...`, `fix(backend): ...`).");
+    let autoRedirectedToDev = false;
+
+    if (headBranch !== "dev" && baseBranch !== "dev") {
+        try {
+            await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: pr.number,
+                base: "dev"
+            });
+            baseBranch = "dev";
+            autoRedirectedToDev = true;
+            core.info(`🔄 Branch de destino alterada automaticamente de '${pr.base.ref}' para 'dev'.`);
+        } catch (error) {
+            errors.push(`❌ **Fluxo de branch inválido:** A branch \`${baseBranch}\` não aceita PRs diretos de \`${headBranch}\`. Tentamos redirecionar automaticamente para \`dev\`, mas ocorreu um erro: ${error.message}`);
+        }
     }
 
-    const testSectionMatch = body.match(/## Como foi testado:([\s\S]*?)(?=##|$)/i);
-    const testSection = testSectionMatch ? testSectionMatch[1] : "";
-    const hasCheckedTest = /-\s*\[x\]/i.test(testSection);
+    if (headBranch !== "dev") {
+        const conventionalRegex = /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([a-z0-9_-]+\))?!?: .+/i;
+        if (!conventionalRegex.test(title)) {
+            errors.push("❌ **Título fora do padrão:** Use Conventional Commits (ex: `feat: ...`, `fix(backend): ...`).");
+        }
 
-    if (!hasCheckedTest) {
-        errors.push("❌ **Testes não informados:** Marque pelo menos um checkbox (`- [x]`) na seção `## Como foi testado:`.");
+        const testSectionMatch = body.match(/## Como foi testado:([\s\S]*?)(?=##|$)/i);
+        const testSection = testSectionMatch ? testSectionMatch[1] : "";
+        const hasCheckedTest = /-\s*\[x\]/i.test(testSection);
+
+        if (!hasCheckedTest) {
+            errors.push("❌ **Testes não informados:** Marque pelo menos um checkbox (`- [x]`) na seção `## Como foi testado:`.");
+        }
     }
 
     if (!pr.assignees || pr.assignees.length === 0) {
@@ -69,10 +91,15 @@ module.exports = async ({ github, context, core }) => {
     });
     const botComment = comments.find(c => c.body?.includes(botTag));
 
+    const redirectNotice = autoRedirectedToDev
+        ? `\n> 🔄 **Nota:** Como esta é uma branch de trabalho (\`${headBranch}\`), alteramos automaticamente a branch de destino de (\`${pr.base.ref}\`) para \`dev\`.\n`
+        : "";
+
     if (errors.length > 0) {
         const errorMessage = [
             botTag,
             `### ⚠️ Pendências na Governança do PR`,
+            redirectNotice,
             `Olá @${pr.user.login}, encontramos alguns pontos que precisam de ajuste antes da revisão:`,
             "",
             ...errors,
@@ -97,14 +124,23 @@ module.exports = async ({ github, context, core }) => {
         }
 
         core.setFailed(`Foram encontrados problemas na governança do PR:\n${errors.join("\n")}`);
-    } else if (botComment) {
-        const successMessage = `${botTag}\n### ✅ Governança do PR Aprovada\nObrigado pelos ajustes, @${pr.user.login}! Todos os critérios do template foram atendidos.`;
+    } else if (botComment || autoRedirectedToDev) {
+        const successMessage = `${botTag}\n### ✅ Governança do PR Aprovada\n${redirectNotice}Obrigado pelos ajustes, @${pr.user.login}! Todos os critérios do template foram atendidos.`;
 
-        await github.rest.issues.updateComment({
-            owner,
-            repo,
-            comment_id: botComment.id,
-            body: successMessage
-        });
+        if (botComment) {
+            await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: botComment.id,
+                body: successMessage
+            });
+        } else {
+            await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: pr.number,
+                body: successMessage
+            });
+        }
     }
 }
