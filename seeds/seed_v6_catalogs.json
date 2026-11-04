@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 6,
+  "levels": [
+    {
+      "level": 1,
+      "xpRequired": 0,
+      "title": "Iniciante Estelar"
+    },
+    {
+      "level": 5,
+      "xpRequired": 1200,
+      "title": "Navegador Orbital"
+    },
+    {
+      "level": 10,
+      "xpRequired": 5000,
+      "title": "Comandante da Frota"
+    }
+  ],
+  "ranks": [
+    {
+      "code": "BRONZE_I",
+      "minLevel": 1
+    },
+    {
+      "code": "SILVER_I",
+      "minLevel": 5
+    },
+    {
+      "code": "GOLD_I",
+      "minLevel": 10
+    }
+  ],
+  "badges": [
+    {
+      "code": "FIRST_FOCUS_HOUR",
+      "name": "Primeira Hora Focada"
+    },
+    {
+      "code": "STREAK_7_DAYS",
+      "name": "Constância de 7 Dias"
+    }
+  ]
+}
