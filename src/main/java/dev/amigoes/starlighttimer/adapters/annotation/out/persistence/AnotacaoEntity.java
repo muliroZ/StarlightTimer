@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.adapters.anotacao.out.persistence;
+package dev.amigoes.starlighttimer.adapters.annotation.out.persistence;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "anotacao")
-public class AnotacaoEntidade {
+public class AnotacaoEntity {
 
     @Id
     private UUID id;
@@ -34,10 +34,10 @@ public class AnotacaoEntidade {
     @Column(name = "atualizado_em", nullable = false)
     private Instant atualizadoEm;
 
-    public AnotacaoEntidade() {
+    public AnotacaoEntity() {
     }
 
-    public AnotacaoEntidade(UUID id, UUID usuarioId, UUID sessaoId, String conteudo, LocalDate dataAnotacao, Instant criadoEm, Instant atualizadoEm) {
+    public AnotacaoEntity(UUID id, UUID usuarioId, UUID sessaoId, String conteudo, LocalDate dataAnotacao, Instant criadoEm, Instant atualizadoEm) {
         this.id = id;
         this.usuarioId = usuarioId;
         this.sessaoId = sessaoId;

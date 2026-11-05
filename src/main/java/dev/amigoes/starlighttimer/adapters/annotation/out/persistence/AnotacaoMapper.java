@@ -1,12 +1,12 @@
-package dev.amigoes.starlighttimer.adapters.anotacao.out.persistence;
+package dev.amigoes.starlighttimer.adapters.annotation.out.persistence;
 
-import dev.amigoes.starlighttimer.domain.anotacao.Anotacao;
+import dev.amigoes.starlighttimer.domain.annotation.Anotacao;
 
-public class AnotacaoMapeador {
+public class AnotacaoMapper {
 
-    public static AnotacaoEntidade paraEntidade(Anotacao dominio) {
+    public static AnotacaoEntity paraEntidade(Anotacao dominio) {
         if (dominio == null) return null;
-        return new AnotacaoEntidade(
+        return new AnotacaoEntity(
                 dominio.getId(),
                 dominio.getUsuarioId(),
                 dominio.getSessaoId(),
@@ -17,7 +17,7 @@ public class AnotacaoMapeador {
         );
     }
 
-    public static Anotacao paraDominio(AnotacaoEntidade entidade) {
+    public static Anotacao paraDominio(AnotacaoEntity entidade) {
         if (entidade == null) return null;
         return new Anotacao(
                 entidade.getId(),
