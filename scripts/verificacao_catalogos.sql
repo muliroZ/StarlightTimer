@@ -22,7 +22,7 @@ SELECT * FROM limite_nivel WHERE nivel IN (1, 2, 5, 10, 60) ORDER BY nivel;
 -- 3. Esperado: patentes nos niveis 1, 6, 11, ..., 56, conforme D-6.
 SELECT codigo, nome, nivel_minimo FROM patente ORDER BY nivel_minimo;
 
--- 4. Conferir as 22 linhas contra D-9 e o contrato no LEIA-ME.
+-- 4. Conferir as 22 linhas contra D-9 e o contrato no README-DEV.md.
 SELECT codigo, nome, tipo_criterio, contagem_alvo, xp_recompensa, criterio_json
 FROM insignia ORDER BY id;
 -- Esperado: 6500 (soma do catalogo; nao e XP concedido a um usuario).
@@ -165,10 +165,3 @@ ROLLBACK;
 -- Se o Flyway usar outro schema, qualificar o nome abaixo.
 SELECT installed_rank, version, description, script, success
 FROM flyway_schema_history ORDER BY installed_rank;
-
-
-ROLLBACK;
-
-SELECT id, email
-FROM usuario
-WHERE id = 'f0000000-0000-4000-8000-000000000001';
