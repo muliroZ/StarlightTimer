@@ -1,6 +1,6 @@
 package dev.amigoes.starlighttimer.config;
 
-import dev.amigoes.starlighttimer.adapters.in.web.HeaderUsuarioAtualAdapter;
+import dev.amigoes.starlighttimer.adapters.identity.out.web.HeaderUsuarioAtualAdapter;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.StringSchema;
