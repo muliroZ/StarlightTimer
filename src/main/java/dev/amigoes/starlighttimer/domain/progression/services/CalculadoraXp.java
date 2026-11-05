@@ -1,7 +1,6 @@
-package dev.amigoes.starlighttimer.domain.services;
+package dev.amigoes.starlighttimer.domain.progression.services;
 
-import dev.amigoes.starlighttimer.domain.entities.SessaoConcluida;
-import dev.amigoes.starlighttimer.domain.enums.TipoSessao;
+import dev.amigoes.starlighttimer.domain.session.events.SessaoConcluida;
 
 import java.util.Objects;
 
@@ -12,7 +11,7 @@ public final class CalculadoraXp {
     public int calcular(SessaoConcluida evento) {
         Objects.requireNonNull(evento, "O evento e obrigatorio");
 
-        if (evento.tipo() != TipoSessao.FOCUS) {
+        if (!evento.ehFoco()) {
             return 0;
         }
 

@@ -1,9 +1,9 @@
-package dev.amigoes.starlighttimer.domain.entities;
+package dev.amigoes.starlighttimer.domain.social.entities;
 
-import dev.amigoes.starlighttimer.domain.enums.StatusPedidoAmizade;
-import dev.amigoes.starlighttimer.domain.exceptions.ConflitoException;
-import dev.amigoes.starlighttimer.domain.exceptions.RecursoNaoEncontradoException;
-import dev.amigoes.starlighttimer.domain.exceptions.RegraAmizadeVioladaExcecao;
+import dev.amigoes.starlighttimer.domain.social.enums.StatusPedidoAmizade;
+import dev.amigoes.starlighttimer.domain.shared.exceptions.ConflitoException;
+import dev.amigoes.starlighttimer.domain.shared.exceptions.RecursoNaoEncontradoException;
+import dev.amigoes.starlighttimer.domain.social.exceptions.RegraAmizadeVioladaExcecao;
 
 import java.time.Instant;
 import java.util.Objects;

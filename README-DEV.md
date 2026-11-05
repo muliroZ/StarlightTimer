@@ -2,7 +2,7 @@
 
 Este guia segue o contexto do projeto (`AGENTS.md` na raiz ou `Contexo.md` nas notas do Obsidian). O ER define o schema e o diagrama de macro-arquitetura define a topologia. As decisões D-1 a D-11 estão em `10-domain-rules-decisions.md` no Obsidian.
 
-A estrutura abaixo é a convenção adotada. O código existente ainda contém pacotes globais como `domain`, `app`, `adapters` e `config`; o alinhamento desses arquivos será feito em PR próprio. A existência desses pacotes não substitui a organização definida pelo contexto.
+As camadas e os módulos usam nomes em inglês. A camada vem primeiro: `domain/progression`, `domain/session`, `app/session` e `adapters/session`. Classes, métodos, campos e mensagens de exceção continuam em português.
 
 ## 1. Arquitetura e dependências
 
@@ -10,54 +10,59 @@ O backend usa arquitetura hexagonal por módulo de feature, com eventos internos
 
 O fluxo de dependência aponta para o núcleo:
 
-`adaptador → aplicacao → dominio`
+`adapters → app → domain`
 
-- `dominio` contém modelos, invariantes, eventos e exceções, usando apenas Java e tipos do próprio domínio. Não importa Spring, JPA, Redis ou Kafka.
-- `aplicacao` contém portas e serviços que orquestram os casos de uso. Depende do domínio e das próprias portas. Serviços podem usar `@Service` e `@Transactional`; outros imports do Spring ficam fora dessa camada.
-- `adaptador` implementa as portas de saída e traduz entradas externas para chamadas às portas de entrada.
-- `compartilhado` contém configurações e infraestrutura transversais e não importa módulos de feature.
+- `domain` contém modelos, invariantes, eventos e exceções, usando apenas Java e tipos do próprio domínio. Não importa Spring, JPA, Redis ou Kafka.
+- `app` contém portas e serviços que orquestram os casos de uso. Depende do domínio e das próprias portas. Serviços podem usar `@Service` e `@Transactional`; outros imports do Spring ficam fora dessa camada.
+- `adapters` implementa as portas de saída e traduz entradas externas para chamadas às portas de entrada.
+- `shared`, dentro de cada camada, contém tipos transversais e não importa módulos de feature. Beans e configurações transversais ficam em `config`.
 
 Um módulo acessa outro apenas por sua porta de entrada pública ou por evento de domínio interno. Não importa modelos, entidades JPA, repositórios ou serviços internos de outro módulo.
 
 ## 2. Organização dos pacotes
 
-O pacote base é `dev.amigoes.starlighttimer`. Os módulos do MVP são `identidade`, `sessao`, `anotacao`, `progressao` e `social`.
+O pacote base é `dev.amigoes.starlighttimer`. Os módulos do MVP são `identity`, `session`, `annotation`, `progression` e `social`. Tipos transversais ficam em `shared` dentro da camada correspondente; configurações transversais ficam em `config`.
 
-Cada módulo tem seu próprio hexágono, como neste exemplo:
+Cada camada é dividida por módulo. Dentro do módulo, use as subpastas em inglês correspondentes ao papel da classe:
 
 ```text
 dev.amigoes.starlighttimer/
-├── identidade/
-├── sessao/
-│   ├── dominio/
-│   │   ├── modelo/
-│   │   ├── evento/
-│   │   └── excecao/
-│   ├── aplicacao/
-│   │   ├── porta/
-│   │   │   ├── entrada/
-│   │   │   └── saida/
-│   │   └── servico/
-│   └── adaptador/
-│       ├── entrada/
-│       │   └── web/
-│       └── saida/
-│           ├── persistencia/
-│           ├── cache/
-│           └── mensageria/
-├── anotacao/
-├── progressao/
-├── social/
-├── compartilhado/
-│   ├── dominio/
-│   ├── web/
-│   ├── config/
-│   ├── seguranca/
-│   └── outbox/
+├── domain/
+│   ├── identity/
+│   ├── session/
+│   │   ├── entities/
+│   │   ├── enums/
+│   │   ├── events/
+│   │   └── exceptions/
+│   ├── annotation/
+│   ├── progression/
+│   │   ├── entities/
+│   │   └── services/
+│   ├── social/
+│   └── shared/
+│       └── exceptions/
+├── app/
+│   ├── session/
+│   │   ├── dto/
+│   │   ├── ports/
+│   │   │   ├── in/
+│   │   │   └── out/
+│   │   └── usecases/
+│   ├── progression/
+│   └── shared/
+│       └── ports/out/
+├── adapters/
+│   ├── session/
+│   │   ├── in/web/
+│   │   └── out/persistence/
+│   ├── progression/
+│   └── shared/
+│       └── out/events/
+├── config/
 └── StarlighttimerApplication.java
 ```
 
-Código Java, incluindo pacotes, classes, métodos, campos e mensagens de exceção, usa português. Identificadores não têm acentos nem `ç`. Constantes de enum copiam exatamente os valores das migrations; nomes impostos por frameworks e o ponto de entrada gerado permanecem como estão.
+Pacotes, pastas de camada e módulos usam inglês. Classes, métodos, campos e mensagens de exceção usam português. Identificadores não têm acentos nem `ç`. Constantes de enum copiam exatamente os valores das migrations; nomes impostos por frameworks e o ponto de entrada gerado permanecem como estão.
 
 | Papel | Exemplo |
 | --- | --- |
@@ -69,14 +74,16 @@ Código Java, incluindo pacotes, classes, métodos, campos e mensagens de exceç
 | Web | `SessaoControlador`, `IniciarSessaoRequisicao`, `SessaoResposta` |
 | Exceção | `DuracaoInvalidaExcecao` |
 
+A árvore mostra a convenção para os módulos do MVP; diretórios sem implementação não precisam de classes artificiais. `PublicadorEventosPort` fica em `app/shared/ports/out`, e seu adaptador Spring em `adapters/shared/out/events`. `SessaoConcluida` é o contrato público em `domain/session/events`; a progressão reconhece foco por `ehFoco()`, sem importar `domain/session/enums`.
+
 ## 3. Implementar um caso de uso
 
-1. Modele as invariantes e transições em `<modulo>/dominio`. Injete `Clock` para leituras de tempo; não use `Instant.now()` ou `LocalDate.now()` sem relógio.
-2. Defina a porta de entrada e o comando em `aplicacao/porta/entrada`; declare as necessidades externas em `aplicacao/porta/saida`.
-3. Implemente a orquestração em `aplicacao/servico`, com dependências recebidas pelo construtor e a transação necessária ao fluxo.
-4. Implemente as portas de saída em `adaptador/saida`. Entidades JPA são separadas dos modelos de domínio, convertidas por mapeadores e declaram `@Table(name = ...)` explicitamente.
-5. Implemente o controlador em `adaptador/entrada/web`, dependendo da porta de entrada. Receba e devolva DTOs próprios (`record`), com Bean Validation para formato e obrigatoriedade.
-6. Traduza exceções de domínio para `ProblemDetail` (RFC 9457) em `compartilhado/web`. Invariantes de negócio permanecem no domínio.
+1. Modele as invariantes e transições em `domain/<module>`. Injete `Clock` para leituras de tempo; não use `Instant.now()` ou `LocalDate.now()` sem relógio.
+2. Defina a porta de entrada e o comando em `app/<module>/ports/in`; declare as necessidades externas em `app/<module>/ports/out`.
+3. Implemente a orquestração em `app/<module>/usecases`, com dependências recebidas pelo construtor e a transação necessária ao fluxo.
+4. Implemente as portas de saída em `adapters/<module>/out`. Entidades JPA são separadas dos modelos de domínio, convertidas por mapeadores e declaram `@Table(name = ...)` explicitamente.
+5. Implemente o controlador em `adapters/<module>/in/web`, dependendo da porta de entrada. Receba e devolva DTOs próprios (`record`), com Bean Validation para formato e obrigatoriedade.
+6. Traduza exceções de domínio para `ProblemDetail` (RFC 9457) em `adapters/shared/in/web`. Invariantes de negócio permanecem no domínio.
 7. Registre os passos de verificação manual e os resultados no PR.
 
 Evite interfaces especulativas, mediadores genéricos, CQRS e event sourcing completo. Um catálogo somente leitura pode ter uma única porta de leitura.
@@ -124,7 +131,7 @@ Use verificação manual: requisições HTTP, consultas SQL e inspeção de logs
 
 - Use os templates de issue existentes. Preserve os títulos dos campos usados pela triagem automática.
 - Crie a branch a partir de `dev`, no padrão `<tipo>/<numero-da-issue>-<descricao>`, como `fix/21-alinha-guia-contexto`.
-- Use Conventional Commits: `<tipo>(<escopo>): <resumo>`. Escopos incluem os módulos em português e áreas como `docs`, `infra` e `ci`.
+- Use Conventional Commits: `<tipo>(<escopo>): <resumo>`. Os escopos de commit continuam em português conforme o contexto; são independentes dos nomes dos pacotes e incluem áreas como `docs`, `infra` e `ci`.
 - Abra PR para `dev` e preencha o template. Use `Closes #N` quando o PR resolver a issue e cite IDs de decisões sem renomeá-los.
 - Na seção de validação, marque os passos manuais realizados ou a revisão documental e descreva o resultado. Compilações usam `-DskipTests`.
 - Atualize a documentação no mesmo PR quando mudar uma decisão ou fluxo e marque a opção correspondente no template.
@@ -132,7 +139,7 @@ Use verificação manual: requisições HTTP, consultas SQL e inspeção de logs
 
 ## 6. Checklist de revisão
 
-- [ ] Classes estão no módulo correto, com pacotes e identificadores em português?
+- [ ] Classes estão na camada e no módulo corretos, com pacotes em inglês e identificadores de negócio em português?
 - [ ] Domínio usa apenas Java e tipos do próprio domínio?
 - [ ] Aplicação depende apenas do domínio e das próprias portas, respeitando a concessão para `@Service` e `@Transactional`?
 - [ ] Comunicação entre módulos usa porta de entrada pública ou evento interno?

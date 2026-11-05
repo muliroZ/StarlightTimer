@@ -1,8 +1,8 @@
-package dev.amigoes.starlighttimer.domain.services;
+package dev.amigoes.starlighttimer.domain.progression.services;
 
-import dev.amigoes.starlighttimer.domain.entities.LimiteNivel;
-import dev.amigoes.starlighttimer.domain.entities.Patente;
-import dev.amigoes.starlighttimer.domain.entities.ResultadoProgressao;
+import dev.amigoes.starlighttimer.domain.progression.entities.LimiteNivel;
+import dev.amigoes.starlighttimer.domain.progression.entities.Patente;
+import dev.amigoes.starlighttimer.domain.progression.entities.ResultadoProgressao;
 
 import java.util.Comparator;
 import java.util.List;

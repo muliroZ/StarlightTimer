@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.domain.entities;
+package dev.amigoes.starlighttimer.domain.progression.entities;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -37,14 +37,14 @@ public final class ProgressoInsignia {
         this.desbloqueadoEm = desbloqueadoEm;
     }
 
-    public boolean incrementar(int contagemAlvo, Clock clock) {
+    public boolean incrementar(int contagemAlvo, Clock relogio) {
         if (contagemAlvo <= 0) {
             throw new IllegalArgumentException(
                 "A contagem alvo deve ser positiva"
             );
         }
 
-        Objects.requireNonNull(clock, "O Clock e obrigatorio");
+        Objects.requireNonNull(relogio, "O relogio e obrigatorio");
 
         int novaContagem = Math.addExact(contagemProgresso, 1);
 
@@ -52,7 +52,7 @@ public final class ProgressoInsignia {
             desbloqueadoEm == null && novaContagem >= contagemAlvo;
 
         Instant instanteDesbloqueio = desbloqueouAgora
-            ? clock.instant()
+            ? relogio.instant()
             : desbloqueadoEm;
 
         contagemProgresso = novaContagem;

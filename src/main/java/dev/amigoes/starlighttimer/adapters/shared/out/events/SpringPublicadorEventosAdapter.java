@@ -1,6 +1,6 @@
-package dev.amigoes.starlighttimer.adapters.out.eventos;
+package dev.amigoes.starlighttimer.adapters.shared.out.events;
 
-import dev.amigoes.starlighttimer.app.ports.out.PublicadorEventosPort;
+import dev.amigoes.starlighttimer.app.shared.ports.out.PublicadorEventosPort;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 

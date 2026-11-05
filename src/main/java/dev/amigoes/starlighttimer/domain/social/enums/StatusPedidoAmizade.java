@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.domain.enums;
+package dev.amigoes.starlighttimer.domain.social.enums;
 
 public enum StatusPedidoAmizade {
   PENDENTE,

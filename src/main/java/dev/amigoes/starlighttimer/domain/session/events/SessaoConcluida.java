@@ -1,6 +1,6 @@
-package dev.amigoes.starlighttimer.domain.entities;
+package dev.amigoes.starlighttimer.domain.session.events;
 
-import dev.amigoes.starlighttimer.domain.enums.TipoSessao;
+import dev.amigoes.starlighttimer.domain.session.enums.TipoSessao;
 
 import java.time.Instant;
 import java.util.Objects;
@@ -21,5 +21,10 @@ public record SessaoConcluida(
         if (duracaoPlanejada <= 0) {
             throw new IllegalArgumentException("duracaoPlanejada deve ser positiva");
         }
+    }
+
+    /** Permite ao consumidor do evento reconhecer foco sem importar o modelo da sessao. */
+    public boolean ehFoco() {
+        return tipo == TipoSessao.FOCUS;
     }
 }
