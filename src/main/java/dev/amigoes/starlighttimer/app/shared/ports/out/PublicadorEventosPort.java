@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.app.ports.out;
+package dev.amigoes.starlighttimer.app.shared.ports.out;
 
 public interface PublicadorEventosPort {
 
