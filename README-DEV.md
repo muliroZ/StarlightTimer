@@ -148,3 +148,22 @@ Use verificação manual: requisições HTTP, consultas SQL e inspeção de logs
 - [ ] Tempo usa `Clock`, e enums seguem as migrations?
 - [ ] Schema, cache, transações e eventos respeitam as fontes da verdade?
 - [ ] O PR registra a validação realizada e respeita a política de testes?
+
+## 7. Contrato declarativo das insígnias (D-9)
+
+O seed `V6__seed_catalogos.sql` propõe a versão 1 de `insignia.criterio_json`. A migration guarda dados do catálogo; os avaliadores ainda serão implementados. `contagem_alvo` é o limiar numérico, e `xp_recompensa` é concedido uma única vez no desbloqueio.
+
+| `tipo_criterio` | Medida para comparar com `contagem_alvo` | Campos da versão 1 |
+| --- | --- | --- |
+| `CONTAGEM_SESSOES` | Quantidade de sessões que passam pelos filtros | `filtros` e, quando aplicável, `janela_hora_local` |
+| `MINUTOS_FOCO` | Soma do foco de sessões concluídas em minutos | `filtros`, `campo_soma`, `unidade_origem`, `unidade_alvo` |
+| `ORBIT` | Maior sequência de dias lógicos consecutivos com estrela | `filtros`, `campo_dia`, `agregacao` |
+| `DIAS_ATIVOS` | Dias lógicos distintos com estrela | `filtros`, `campo_dia`, `consecutivos` |
+| `CONTAGEM_DESCANSOS` | Descansos concluídos vinculados a foco | `filtros`, `vinculo_foco` |
+| `CONTAGEM_ANOTACOES` | Anotações de sessões concluídas | `sessao_vinculada` |
+| `DIAS_ANOTACOES` | Dias lógicos distintos de criação de anotações | `campo_instante`, `fuso`, `virada_dia_local`, `consecutivos` |
+| `ESPECIAL` | Medida da regra nomeada em `regra` | Parâmetros próprios de `CELESTIAL_CLOCKWORK`, `STABLE_FUSION`, `REIGNITION` ou `PHOENIX_FLAME` |
+
+Todo JSON tem `versao: 1`. Em `filtros`, `tipo` e `status` usam os valores das migrations; `tempo_de_pausa: 0` restringe a sessão sem pausa. `janela_hora_local` usa `iniciado_em`, com limite inicial inclusivo e final exclusivo. `PERFIL_NA_AVALIACAO` significa interpretar o instante no fuso do perfil vigente na avaliação, conforme D-9; não altera `sessao.dia_local`, congelado no início pela D-7.
+
+`campo_dia: "dia_local"` usa o dia lógico da sessão, cuja virada é às 04:00 locais. Em `MINUTOS_FOCO`, `tempo_de_foco` está em segundos e o alvo em minutos. `vinculo_foco` requer foco concluído do mesmo usuário e início do descanso entre 0 e 120 segundos depois do término do foco. `DIAS_ANOTACOES` deriva o dia lógico de `criado_em`, nunca de `data_anotacao`. Para `ESPECIAL`, o avaliador em código usa `regra` para selecionar uma das quatro regras de D-9; não há avaliador genérico de JSON implementado neste PR.
