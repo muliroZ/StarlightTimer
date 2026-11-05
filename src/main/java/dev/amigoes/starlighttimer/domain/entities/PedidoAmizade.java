@@ -53,7 +53,6 @@ public class PedidoAmizade {
     validarDestinatario(usuarioSolicitante);
     validarEstadoPendente();
 
-    // [P3] Valida antes de alterar
     Objects.requireNonNull(agora, "O timestamp de resposta nao pode ser nulo");
 
     this.status = StatusPedidoAmizade.RECUSADO;
