@@ -2,7 +2,7 @@
 
 Este guia segue o contexto do projeto (`AGENTS.md` na raiz ou `Contexo.md` nas notas do Obsidian). O ER define o schema e o diagrama de macro-arquitetura define a topologia. As decisões D-1 a D-11 estão em `10-domain-rules-decisions.md` no Obsidian.
 
-As camadas e os módulos usam nomes em inglês. A camada vem primeiro: `domain/progression`, `domain/session`, `app/session` e `adapters/session`. Classes, métodos, campos e mensagens de exceção continuam em português.
+As camadas e os módulos usam nomes em inglês. A camada vem primeiro: `domain/progression`, `domain/session`, `app/session` e `adapters/session`. Nomes de domínio, métodos, campos e mensagens de exceção continuam em português; os sufixos de papel das classes usam inglês, como Service, Controller e Repository.
 
 ## 1. Arquitetura e dependências
 
@@ -62,17 +62,17 @@ dev.amigoes.starlighttimer/
 └── StarlighttimerApplication.java
 ```
 
-Pacotes, pastas de camada e módulos usam inglês. Classes, métodos, campos e mensagens de exceção usam português. Identificadores não têm acentos nem `ç`. Constantes de enum copiam exatamente os valores das migrations; nomes impostos por frameworks e o ponto de entrada gerado permanecem como estão.
+Pacotes, pastas de camada e módulos usam inglês. Nomes de domínio, métodos, campos e mensagens de exceção usam português; sufixos que indicam o papel da classe usam inglês (Service, Controller, Repository, Mapper, Adapter, Entity, Request, Response, UseCase, Command, Port e Exception). Identificadores não têm acentos nem `ç`. Constantes de enum copiam exatamente os valores das migrations; nomes impostos por frameworks e o ponto de entrada gerado permanecem como estão.
 
 | Papel | Exemplo |
 | --- | --- |
 | Modelo e evento | `Sessao`, `SessaoConcluida` |
-| Porta de entrada e comando | `IniciarSessaoCasoDeUso`, `IniciarSessaoComando` |
-| Serviço de aplicação | `IniciarSessaoServico` |
-| Porta de saída | `SalvarSessaoPorta` |
-| Persistência | `SessaoEntidade`, `SessaoRepositorioJpa`, `SessaoMapeador`, `SessaoAdaptadorPersistencia` |
-| Web | `SessaoControlador`, `IniciarSessaoRequisicao`, `SessaoResposta` |
-| Exceção | `DuracaoInvalidaExcecao` |
+| Porta de entrada e comando | `IniciarSessaoUseCase`, `IniciarSessaoCommand` |
+| Serviço de aplicação | `IniciarSessaoService` |
+| Porta de saída | `SalvarSessaoPort` |
+| Persistência | `SessaoEntity`, `SessaoJpaRepository`, `SessaoMapper`, `SessaoPersistenceAdapter` |
+| Web | `SessaoController`, `IniciarSessaoRequest`, `SessaoResponse` |
+| Exceção | `DuracaoInvalidaException` |
 
 A árvore mostra a convenção para os módulos do MVP; diretórios sem implementação não precisam de classes artificiais. `PublicadorEventosPort` fica em `app/shared/ports/out`, e seu adaptador Spring em `adapters/shared/out/events`. `SessaoConcluida` é o contrato público em `domain/session/events`; a progressão reconhece foco por `ehFoco()`, sem importar `domain/session/enums`.
 
