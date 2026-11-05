@@ -1,142 +1,143 @@
-# 🛠️ Guia de Desenvolvimento — StarlightTimer (`README-DEV.md`)
+# Guia de desenvolvimento — StarlightTimer
 
-Bem-vindo(a) ao guia técnico do **StarlightTimer**! Este documento descreve a nossa arquitetura, organização de pacotes, regras de dependência e o fluxo de trabalho para contribuir com o projeto.
+Este guia segue o contexto do projeto (`AGENTS.md` na raiz ou `Contexo.md` nas notas do Obsidian). O ER define o schema e o diagrama de macro-arquitetura define a topologia. As decisões D-1 a D-11 estão em `10-domain-rules-decisions.md` no Obsidian.
 
----
+A estrutura abaixo é a convenção adotada. O código existente ainda contém pacotes globais como `domain`, `app`, `adapters` e `config`; o alinhamento desses arquivos será feito em PR próprio. A existência desses pacotes não substitui a organização definida pelo contexto.
 
-## 🏛️ 1. Arquitetura do Projeto (Arquitetura Hexagonal)
+## 1. Arquitetura e dependências
 
-Utilizamos a **Arquitetura Hexagonal (Ports and Adapters)** com uma abordagem **híbrida (Feature-based nos Casos de Uso)**. O objetivo principal é isolar o coração do negócio (`domain` e `app`) de detalhes técnicos externos, frameworks, banco de dados e interfaces de usuário (`adapters` e `config`).
+O backend usa arquitetura hexagonal por módulo de feature, com eventos internos entre módulos e Kafka via transactional outbox para consumidores externos.
 
-### Regra de Ouro de Dependência
-> **O fluxo de dependência aponta sempre para o centro (Domínio).**  
-> `adapters` / `config` ➔ `app` ➔ `domain`
+O fluxo de dependência aponta para o núcleo:
 
-* O pacote **`domain`** não conhece ninguém. Deve ser **100% Java puro** (sem anotações do Spring, JPA/Hibernate, Jackson, etc.).
-* O pacote **`app`** conhece apenas o `domain`. Ele define as interfaces (**Ports**) pelas quais o mundo externo conversa com a aplicação.
-* O pacote **`adapters`** conhece `app` e `domain`, implementando os detalhes técnicos (Controllers REST, entidades JPA, clientes externos).
-* O pacote **`config`** enxerga todas as camadas para fazer a injeção de dependência (Beans do Spring) e configurações globais.
+`adaptador → aplicacao → dominio`
 
----
+- `dominio` contém modelos, invariantes, eventos e exceções, usando apenas Java e tipos do próprio domínio. Não importa Spring, JPA, Redis ou Kafka.
+- `aplicacao` contém portas e serviços que orquestram os casos de uso. Depende do domínio e das próprias portas. Serviços podem usar `@Service` e `@Transactional`; outros imports do Spring ficam fora dessa camada.
+- `adaptador` implementa as portas de saída e traduz entradas externas para chamadas às portas de entrada.
+- `compartilhado` contém configurações e infraestrutura transversais e não importa módulos de feature.
 
-## 📂 2. Estrutura de Pacotes (`dev.amigoes.starlighttimer`)
+Um módulo acessa outro apenas por sua porta de entrada pública ou por evento de domínio interno. Não importa modelos, entidades JPA, repositórios ou serviços internos de outro módulo.
 
-Abaixo está o mapa da nossa árvore principal em `src/main/java/dev/amigoes/starlighttimer/`:
+## 2. Organização dos pacotes
+
+O pacote base é `dev.amigoes.starlighttimer`. Os módulos do MVP são `identidade`, `sessao`, `anotacao`, `progressao` e `social`.
+
+Cada módulo tem seu próprio hexágono, como neste exemplo:
 
 ```text
 dev.amigoes.starlighttimer/
-├── domain/                          # 💎 NÚCLEO DE NEGÓCIO (Java Puro)
-│   ├── entities/                    # Entidades de domínio e regras de negócio intrínsecas
-│   ├── enums/                       # Enumerações de domínio
-│   └── exceptions/                  # Exceções de regra de negócio
-│
-├── app/                             # ⚙️ CAMADA DE APLICAÇÃO (Orquestração)
-│   ├── usecases/                    # Organizado por FEATURE / CONTEXTO
-│   │   ├── timer/                   # Exemplo de feature: Timer
-│   │   │   ├── StartTimerUseCase.java
-│   │   │   └── StopTimerUseCase.java
-│   │   └── user/                    # Exemplo de feature: Usuário
-│   │       └── RegisterUserUseCase.java
-│   ├── dto/                         # Objetos de transferência da camada de aplicação (Commands/Queries/Outputs)
-│   └── ports/                       # Fronteira do Hexágono (Interfaces/Contratos)
-│       ├── in/                      # Driving Ports (Contratos que os Use Cases implementam)
-│       └── out/                     # Driven Ports (Contratos que os Use Cases consomem, ex: Repositories)
-│
-├── adapters/                        # 🔌 MUNDO EXTERNO (Frameworks & I/O)
-│   ├── in/                          # Quem aciona a aplicação (Primary/Driving Adapters)
-│   │   └── web/                     # Controllers REST, Request/Response DTOs da Web, ExceptionHandlers
-│   └── out/                         # Quem é acionado pela aplicação (Secondary/Driven Adapters)
-│       └── persistence/             # Repositórios Spring Data JPA, Entidades ORM (@Entity) e Mappers
-│
-├── config/                          # 🧩 CONFIGURAÇÃO & INFRAESTRUTURA
-│   └── ...                          # @Configuration, registro de @Bean dos UseCases, Security, Swagger/OpenAPI
-│
-└── StarlighttimerApplication.java   # Ponto de entrada do Spring Boot
+├── identidade/
+├── sessao/
+│   ├── dominio/
+│   │   ├── modelo/
+│   │   ├── evento/
+│   │   └── excecao/
+│   ├── aplicacao/
+│   │   ├── porta/
+│   │   │   ├── entrada/
+│   │   │   └── saida/
+│   │   └── servico/
+│   └── adaptador/
+│       ├── entrada/
+│       │   └── web/
+│       └── saida/
+│           ├── persistencia/
+│           ├── cache/
+│           └── mensageria/
+├── anotacao/
+├── progressao/
+├── social/
+├── compartilhado/
+│   ├── dominio/
+│   ├── web/
+│   ├── config/
+│   ├── seguranca/
+│   └── outbox/
+└── StarlighttimerApplication.java
 ```
 
----
+Código Java, incluindo pacotes, classes, métodos, campos e mensagens de exceção, usa português. Identificadores não têm acentos nem `ç`. Constantes de enum copiam exatamente os valores das migrations; nomes impostos por frameworks e o ponto de entrada gerado permanecem como estão.
 
-## 🔄 3. Fluxo de uma Requisição (Passo a Passo)
+| Papel | Exemplo |
+| --- | --- |
+| Modelo e evento | `Sessao`, `SessaoConcluida` |
+| Porta de entrada e comando | `IniciarSessaoCasoDeUso`, `IniciarSessaoComando` |
+| Serviço de aplicação | `IniciarSessaoServico` |
+| Porta de saída | `SalvarSessaoPorta` |
+| Persistência | `SessaoEntidade`, `SessaoRepositorioJpa`, `SessaoMapeador`, `SessaoAdaptadorPersistencia` |
+| Web | `SessaoControlador`, `IniciarSessaoRequisicao`, `SessaoResposta` |
+| Exceção | `DuracaoInvalidaExcecao` |
 
-Para criar um novo endpoint ou funcionalidade, siga o caminho abaixo:
+## 3. Implementar um caso de uso
 
-1. **Domínio (`domain`):**
-   * Crie ou atualize a entidade em `domain/entities` com suas validações puras e comportamentos.
-   * Se necessário, adicione novos `enums` ou `exceptions` de negócio.
-2. **Portas e DTOs de Aplicação (`app/ports` e `app/dto`):**
-   * Crie os Records/DTOs de entrada e saída em `app/dto` (podem ser agrupados por subpacotes de feature se crescerem).
-   * Defina a interface da **Porta de Entrada** em `app/ports/in` (ex: `CreateTimerInputPort`).
-   * Se precisar buscar/salvar dados no banco, defina o método na interface da **Porta de Saída** em `app/ports/out` (ex: `TimerRepositoryOutputPort`).
-3. **Caso de Uso (`app/usecases/<feature>`):**
-   * Dentro da pasta da *feature* correspondente em `app/usecases/<feature>`, crie a classe do Caso de Uso implementando a `InputPort` e injetando a `OutputPort` via construtor.
-   * **Atenção:** Evite acoplamento forte com o framework aqui; prefira declarar os `@Bean` dos casos de uso no pacote `config` (ou use apenas anotações mínimas caso o time decida padronizar `@Service`).
-4. **Adaptador de Saída (`adapters/out/persistence`):**
-   * Crie/atualize a entidade do banco (`@Entity` JPA), a interface do `SpringDataRepository` e o `Mapper` (que converte entre `Domain Entity` ⇄ `JPA Entity`).
-   * Implemente a interface de `app/ports/out` chamando o repositório JPA.
-5. **Adaptador de Entrada (`adapters/in/web`):**
-   * Crie o `@RestController` injetando a **interface** de `app/ports/in`.
-   * Receba o Request DTO (com validações `@Valid` do Jakarta Validation se aplicável), converta para o DTO da camada `app`, invoque a porta de entrada e retorne o Response HTTP adequado.
+1. Modele as invariantes e transições em `<modulo>/dominio`. Injete `Clock` para leituras de tempo; não use `Instant.now()` ou `LocalDate.now()` sem relógio.
+2. Defina a porta de entrada e o comando em `aplicacao/porta/entrada`; declare as necessidades externas em `aplicacao/porta/saida`.
+3. Implemente a orquestração em `aplicacao/servico`, com dependências recebidas pelo construtor e a transação necessária ao fluxo.
+4. Implemente as portas de saída em `adaptador/saida`. Entidades JPA são separadas dos modelos de domínio, convertidas por mapeadores e declaram `@Table(name = ...)` explicitamente.
+5. Implemente o controlador em `adaptador/entrada/web`, dependendo da porta de entrada. Receba e devolva DTOs próprios (`record`), com Bean Validation para formato e obrigatoriedade.
+6. Traduza exceções de domínio para `ProblemDetail` (RFC 9457) em `compartilhado/web`. Invariantes de negócio permanecem no domínio.
+7. Registre os passos de verificação manual e os resultados no PR.
 
----
+Evite interfaces especulativas, mediadores genéricos, CQRS e event sourcing completo. Um catálogo somente leitura pode ter uma única porta de leitura.
 
-## 🚀 4. Configuração do Ambiente Local
+### Persistência, cache e eventos
 
-### Pré-requisitos
-* **Java JDK** (versão configurada no `pom.xml`, ex: Java 17 ou 21)
-* **Docker** e **Docker Compose**
-* *(Opcional)* Maven instalado globalmente — o projeto já inclui o **Maven Wrapper** (`./mvnw` e `mvnw.cmd`).
+- Mudanças de schema começam no ER e viram uma nova migration Flyway. Nunca edite migrations já mergeadas em `dev`; mantenha `ddl-auto=validate`.
+- PostgreSQL é a fonte da verdade. Redis usa cache-aside; escritas invalidam o cache e falha de cache é tratada como miss. A validação de conclusão de sessão lê estado autoritativo do banco.
+- A progressão reage a eventos internos de conclusão, com XP consistente na mesma transação da sessão. O ledger `ganho_xp` é append-only e `perfil.xp_total` é seu cache transacional.
+- Eventos externos são gravados no outbox na transação de negócio e publicados depois no Kafka. Consumidores precisam ser idempotentes. A tabela de outbox deve estar no ER antes da migration (BL-12).
+- O aceite de amizade atualiza o status do pedido; o trigger cria a amizade e exclui o pedido. O adaptador conhece esse comportamento, faz flush e carrega a amizade para a resposta.
 
-### Passo a Passo para Rodar
+## 4. Ambiente local e verificação
 
-1. **Variáveis de Ambiente:**
-   Copie o arquivo `.env.example` para `.env` na raiz do projeto e preencha os valores necessários:
-   ```bash
-   cp .env.example .env
-   ```
+Pré-requisitos: Java 21, Docker, Docker Compose e Git. Use sempre o Maven Wrapper do repositório.
 
-2. **Subir Infraestrutura (Banco de Dados e Serviços):**
-   Utilize o Docker Compose para iniciar os containers de apoio:
-   ```bash
-   docker compose up -d
-   ```
+Copie `.env.example` para `.env` e preencha as variáveis do ambiente. Não versione segredos.
 
-3. **Compilar e Executar a Aplicação:**
-   * No Linux / macOS:
-     ```bash
-     ./mvnw clean spring-boot:run
-     ```
-   * No Windows (PowerShell / CMD):
-     ```powershell
-     .\mvnw.cmd clean spring-boot:run
-     ```
+```bash
+cp .env.example .env
+docker compose up -d
+./mvnw -DskipTests compile
+./mvnw -DskipTests spring-boot:run
+```
 
-4. **Executar os Testes:**
-   ```bash
-   ./mvnw test
-   ```
+No Windows, use `mvnw.cmd`:
 
----
+```powershell
+.\mvnw.cmd -DskipTests compile
+.\mvnw.cmd -DskipTests spring-boot:run
+```
 
-## 🌿 5. Fluxo de Contribuição, Issues e Pull Requests
+Para empacotar ou executar a verificação de build:
 
-O repositório conta com automações no GitHub Actions (`.github/workflows/issue-triage.yml` e `pr-check.yml`) que validam o padrão das entregas:
+```bash
+./mvnw -DskipTests clean package
+./mvnw -DskipTests verify
+```
 
-* **Issues:** Sempre utilize os templates oficiais ao abrir uma Issue (`bug_report.yml`, `feature.yml` ou `task.yml`). Issues em branco estão desabilitadas.
-* **Branches:** Crie branches seguindo o padrão semântico vinculado à tarefa, por exemplo:
-  * `feat/<numero-da-issue>-descricao-curta`
-  * `fix/<numero-da-issue>-descricao-curta`
-  * `chore/<numero-da-issue>-descricao-curta`
-* **Pull Requests:**
-  * Preencha completamente o template de PR (`.github/pull_request_template.md`).
-  * O script de verificação automática (`pr-check.js`) validará a estrutura do seu PR antes do merge.
-  * Certifique-se de que `./mvnw test` passa localmente antes de abrir ou atualizar o PR.
+**Política vigente (§10.1 do contexto):** até a entrega de 06/11/2026, assistentes de IA não escrevem, alteram nem executam testes automatizados. A restrição permanece até a seção ser explicitamente atualizada; a passagem da data não libera testes por si só.
 
----
+Use verificação manual: requisições HTTP, consultas SQL e inspeção de logs, com resultado esperado e observado no PR. Não altere arquivos de teste, dependências ou plugins de teste durante essa restrição.
 
-## ✅ 6. Checklist Rápido de Code Review (Arquitetura)
+## 5. Contribuição
 
-Antes de aprovar ou abrir um PR, verifique:
-- [ ] Alguma classe em `domain` importou pacotes de `org.springframework.*`, `jakarta.persistence.*` ou `adapters.*`? *(Se sim, remova!)*
-- [ ] O `Controller` em `adapters/in/web` está conversando com a interface em `app/ports/in` em vez de chamar o repositório direto?
-- [ ] A entidade do banco (`@Entity`) está isolada em `adapters/out/persistence` e separada da entidade de negócio (`domain/entities`)?
-- [ ] O novo Caso de Uso foi colocado dentro de uma subpasta de *feature* semântica em `app/usecases/<feature>`?
+- Use os templates de issue existentes. Preserve os títulos dos campos usados pela triagem automática.
+- Crie a branch a partir de `dev`, no padrão `<tipo>/<numero-da-issue>-<descricao>`, como `fix/21-alinha-guia-contexto`.
+- Use Conventional Commits: `<tipo>(<escopo>): <resumo>`. Escopos incluem os módulos em português e áreas como `docs`, `infra` e `ci`.
+- Abra PR para `dev` e preencha o template. Use `Closes #N` quando o PR resolver a issue e cite IDs de decisões sem renomeá-los.
+- Na seção de validação, marque os passos manuais realizados ou a revisão documental e descreva o resultado. Compilações usam `-DskipTests`.
+- Atualize a documentação no mesmo PR quando mudar uma decisão ou fluxo e marque a opção correspondente no template.
+- Não faça commit, push ou merge direto em `dev` ou `main`.
+
+## 6. Checklist de revisão
+
+- [ ] Classes estão no módulo correto, com pacotes e identificadores em português?
+- [ ] Domínio usa apenas Java e tipos do próprio domínio?
+- [ ] Aplicação depende apenas do domínio e das próprias portas, respeitando a concessão para `@Service` e `@Transactional`?
+- [ ] Comunicação entre módulos usa porta de entrada pública ou evento interno?
+- [ ] Controladores dependem de portas de entrada e usam DTOs próprios?
+- [ ] Entidades JPA e modelos de domínio estão separados por mapeadores?
+- [ ] Tempo usa `Clock`, e enums seguem as migrations?
+- [ ] Schema, cache, transações e eventos respeitam as fontes da verdade?
+- [ ] O PR registra a validação realizada e respeita a política de testes?
