@@ -26,10 +26,8 @@ public class Perfil {
         if (fusoHorario == null || fusoHorario.isBlank()) {
             throw new DomainValidationException("O fuso horário nao pode ser nulo ou vazio");
         }
-        try {
-            ZoneId.of(fusoHorario);
-        } catch (Exception e) {
-            throw new DomainValidationException("Fuso horario invalido");
+        if (!ZoneId.getAvailableZoneIds().contains(fusoHorario)) {
+            throw new DomainValidationException("Fuso horario invalido. Deve ser uma zona IANA valida");
         }
         this.fusoHorario = fusoHorario;
     }
