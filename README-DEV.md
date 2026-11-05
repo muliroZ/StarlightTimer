@@ -4,6 +4,8 @@ Este guia segue o contexto do projeto (`AGENTS.md` na raiz ou `Contexo.md` nas n
 
 A estrutura abaixo é a convenção adotada. O código existente ainda contém pacotes globais como `domain`, `app`, `adapters` e `config`; o alinhamento desses arquivos será feito em PR próprio. A existência desses pacotes não substitui a organização definida pelo contexto.
 
+O domínio de progressão já fica em `progressao/dominio/modelo` e `progressao/dominio/servico`; ele recebe `SessaoConcluida` de `sessao/dominio/evento`. O tipo `TipoSessao` pertence a `sessao/dominio/modelo`; consumidores externos reconhecem o foco pelo método `ehFoco()` do evento, sem importar o modelo interno da sessão.
+
 ## 1. Arquitetura e dependências
 
 O backend usa arquitetura hexagonal por módulo de feature, com eventos internos entre módulos e Kafka via transactional outbox para consumidores externos.

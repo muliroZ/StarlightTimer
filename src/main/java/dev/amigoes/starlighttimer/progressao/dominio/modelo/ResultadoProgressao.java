@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.domain.entities;
+package dev.amigoes.starlighttimer.progressao.dominio.modelo;
 
 import java.util.Objects;
 import java.util.OptionalInt;

@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.domain.entities;
+package dev.amigoes.starlighttimer.progressao.dominio.modelo;
 
 public record LimiteNivel(int nivel, int xpNecessario) {
 
