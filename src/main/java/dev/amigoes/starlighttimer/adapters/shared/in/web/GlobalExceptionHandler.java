@@ -1,7 +1,7 @@
-package dev.amigoes.starlighttimer.adapters.in.web;
+package dev.amigoes.starlighttimer.adapters.shared.in.web;
 
 import dev.amigoes.starlighttimer.domain.shared.exceptions.DomainValidationException;
-import dev.amigoes.starlighttimer.domain.shared.exceptions.UsuarioNaoAutenticadoException;
+import dev.amigoes.starlighttimer.domain.identity.exceptions.UsuarioNaoAutenticadoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;

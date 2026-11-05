@@ -1,7 +1,8 @@
-package dev.amigoes.starlighttimer.adapters.in.web;
+package dev.amigoes.starlighttimer.adapters.identity.out.web;
 
-import dev.amigoes.starlighttimer.app.ports.in.UsuarioAtualPort;
-import dev.amigoes.starlighttimer.domain.shared.exceptions.UsuarioNaoAutenticadoException;import jakarta.servlet.http.HttpServletRequest;
+import dev.amigoes.starlighttimer.app.identity.ports.out.UsuarioAtualPort;
+import dev.amigoes.starlighttimer.domain.identity.exceptions.UsuarioNaoAutenticadoException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.annotation.RequestScope;
 

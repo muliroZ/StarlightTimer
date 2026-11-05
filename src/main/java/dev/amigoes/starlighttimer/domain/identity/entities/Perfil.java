@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.domain.social.entities;
+package dev.amigoes.starlighttimer.domain.identity.entities;
 
 import dev.amigoes.starlighttimer.domain.shared.exceptions.DomainValidationException;
 

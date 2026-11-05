@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.app.ports.in;
+package dev.amigoes.starlighttimer.app.identity.ports.out;
 
 import java.util.UUID;
 
