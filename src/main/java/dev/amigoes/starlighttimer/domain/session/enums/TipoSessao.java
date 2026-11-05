@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.sessao.dominio.modelo;
+package dev.amigoes.starlighttimer.domain.session.enums;
 
 public enum TipoSessao {
     FOCUS,

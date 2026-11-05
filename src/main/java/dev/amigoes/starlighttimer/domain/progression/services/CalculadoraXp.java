@@ -1,6 +1,6 @@
-package dev.amigoes.starlighttimer.progressao.dominio.servico;
+package dev.amigoes.starlighttimer.domain.progression.services;
 
-import dev.amigoes.starlighttimer.sessao.dominio.evento.SessaoConcluida;
+import dev.amigoes.starlighttimer.domain.session.events.SessaoConcluida;
 
 import java.util.Objects;
 

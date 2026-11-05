@@ -1,6 +1,6 @@
-package dev.amigoes.starlighttimer.sessao.dominio.evento;
+package dev.amigoes.starlighttimer.domain.session.events;
 
-import dev.amigoes.starlighttimer.sessao.dominio.modelo.TipoSessao;
+import dev.amigoes.starlighttimer.domain.session.enums.TipoSessao;
 
 import java.time.Instant;
 import java.util.Objects;

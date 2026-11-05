@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.domain.exceptions;
+package dev.amigoes.starlighttimer.domain.shared.exceptions;
 
 public class RecursoNaoEncontradoException extends RuntimeException {
 

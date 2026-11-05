@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.progressao.dominio.modelo;
+package dev.amigoes.starlighttimer.domain.progression.entities;
 
 import java.time.Clock;
 import java.time.Instant;
