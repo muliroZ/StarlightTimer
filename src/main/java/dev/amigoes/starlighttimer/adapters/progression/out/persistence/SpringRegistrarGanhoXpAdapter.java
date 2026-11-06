@@ -3,9 +3,9 @@ package dev.amigoes.starlighttimer.adapters.progression.out.persistence;
 import dev.amigoes.starlighttimer.adapters.progression.out.persistence.repository.GanhoXpJpaRepository;
 import dev.amigoes.starlighttimer.app.progression.ports.out.RegistrarGanhoXpPort;
 import dev.amigoes.starlighttimer.domain.progression.entities.GanhoXp;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-@Component
+@Service
 public class SpringRegistrarGanhoXpAdapter implements RegistrarGanhoXpPort {
 
     private final GanhoXpJpaRepository ganhoXpJpaRepository;

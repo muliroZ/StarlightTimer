@@ -1,6 +1,8 @@
 package dev.amigoes.starlighttimer.app.progression.usecases;
 
 import dev.amigoes.starlighttimer.app.progression.ports.out.LerCatalogoProgressaoPort;
+import dev.amigoes.starlighttimer.domain.progression.entities.Insignia;
+import dev.amigoes.starlighttimer.domain.progression.entities.Constelacao;
 import dev.amigoes.starlighttimer.domain.progression.entities.LimiteNivel;
 import dev.amigoes.starlighttimer.domain.progression.entities.Patente;
 
@@ -20,5 +22,13 @@ public class LerCatalogoProgressaoService {
 
     public List<Patente> buscarPatentes() {
         return lerCatalogoProgressao.buscarPatentes();
+    }
+
+    public List<Insignia> buscarInsignias() {
+        return lerCatalogoProgressao.buscarInsignias();
+    }
+
+    public List<Constelacao> buscarConstelacoes() {
+        return lerCatalogoProgressao.buscarConstelacoes();
     }
 }
