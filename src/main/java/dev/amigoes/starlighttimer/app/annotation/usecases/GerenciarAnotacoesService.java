@@ -4,7 +4,7 @@ import dev.amigoes.starlighttimer.app.annotation.ports.in.CriarAnotacaoCommand;
 import dev.amigoes.starlighttimer.app.annotation.ports.in.EditarAnotacaoCommand;
 import dev.amigoes.starlighttimer.app.annotation.ports.in.GerenciarAnotacoesUseCase;
 import dev.amigoes.starlighttimer.app.annotation.ports.out.AnotacaoRepositoryPort;
-import dev.amigoes.starlighttimer.app.session.ports.out.SessaoRepositoryPort;
+import dev.amigoes.starlighttimer.app.session.ports.in.VerificarPosseSessaoUseCase;
 import dev.amigoes.starlighttimer.domain.annotation.Anotacao;
 import dev.amigoes.starlighttimer.domain.shared.exceptions.RecursoNaoEncontradoException;
 import dev.amigoes.starlighttimer.domain.shared.exceptions.RegraDeNegocioException;
@@ -22,14 +22,14 @@ import java.util.UUID;
 public class GerenciarAnotacoesService implements GerenciarAnotacoesUseCase {
 
   private final AnotacaoRepositoryPort anotacaoRepository;
-  private final SessaoRepositoryPort sessaoRepository;
+  private final VerificarPosseSessaoUseCase verificarPosseSessao;
   private final Clock clock;
 
   public GerenciarAnotacoesService(AnotacaoRepositoryPort anotacaoRepository,
-                                   SessaoRepositoryPort sessaoRepository,
+                                   VerificarPosseSessaoUseCase verificarPosseSessao,
                                    Clock clock) {
     this.anotacaoRepository = Objects.requireNonNull(anotacaoRepository);
-    this.sessaoRepository = Objects.requireNonNull(sessaoRepository);
+    this.verificarPosseSessao = Objects.requireNonNull(verificarPosseSessao);
     this.clock = Objects.requireNonNull(clock);
   }
 
@@ -40,8 +40,7 @@ public class GerenciarAnotacoesService implements GerenciarAnotacoesUseCase {
     Objects.requireNonNull(comando, "Comando obrigatorio");
 
     if (comando.sessaoId() != null) {
-      sessaoRepository.buscarPorIdEUsuario(comando.sessaoId(), usuarioId)
-          .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao nao encontrada"));
+      verificarPosseSessao.verificar(usuarioId, comando.sessaoId());
     }
 
     Instant agora = clock.instant();
@@ -63,9 +62,12 @@ public class GerenciarAnotacoesService implements GerenciarAnotacoesUseCase {
   public List<Anotacao> listar(UUID usuarioId, UUID sessaoId, LocalDate data) {
     Objects.requireNonNull(usuarioId, "ID do usuario obrigatorio");
 
+    if (sessaoId != null && data != null) {
+      throw new RegraDeNegocioException("Informe apenas sessaoId ou data.");
+    }
+
     if (sessaoId != null) {
-      sessaoRepository.buscarPorIdEUsuario(sessaoId, usuarioId)
-          .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao nao encontrada"));
+      verificarPosseSessao.verificar(usuarioId, sessaoId);
       return anotacaoRepository.buscarPorUsuarioESessao(usuarioId, sessaoId);
     }
 

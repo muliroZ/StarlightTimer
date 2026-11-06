@@ -3,7 +3,7 @@ package dev.amigoes.starlighttimer.adapters.annotation.in.web;
 import dev.amigoes.starlighttimer.app.annotation.ports.in.CriarAnotacaoCommand;
 import dev.amigoes.starlighttimer.app.annotation.ports.in.EditarAnotacaoCommand;
 import dev.amigoes.starlighttimer.app.annotation.ports.in.GerenciarAnotacoesUseCase;
-import dev.amigoes.starlighttimer.app.identity.ports.out.UsuarioAtualPort;
+import dev.amigoes.starlighttimer.app.identity.ports.in.ConsultarIdentidadePort;
 import dev.amigoes.starlighttimer.domain.annotation.Anotacao;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -20,16 +20,16 @@ import java.util.UUID;
 public class AnotacaoController {
 
   private final GerenciarAnotacoesUseCase useCase;
-  private final UsuarioAtualPort usuarioAtualPort;
+  private final ConsultarIdentidadePort identidade;
 
-  public AnotacaoController(GerenciarAnotacoesUseCase useCase, UsuarioAtualPort usuarioAtualPort) {
+  public AnotacaoController(GerenciarAnotacoesUseCase useCase, ConsultarIdentidadePort identidade) {
     this.useCase = useCase;
-    this.usuarioAtualPort = usuarioAtualPort;
+    this.identidade = identidade;
   }
 
   @PostMapping
   public ResponseEntity<AnotacaoResponse> criar(@Valid @RequestBody CriarAnotacaoRequest request) {
-    UUID usuarioId = usuarioAtualPort.getUsuarioId();
+    UUID usuarioId = identidade.obterUsuarioAtual();
     CriarAnotacaoCommand comando = new CriarAnotacaoCommand(
         request.sessaoId(),
         request.conteudo(),
@@ -43,7 +43,7 @@ public class AnotacaoController {
   public ResponseEntity<List<AnotacaoResponse>> listar(
       @RequestParam(required = false) UUID sessaoId,
       @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data) {
-    UUID usuarioId = usuarioAtualPort.getUsuarioId();
+    UUID usuarioId = identidade.obterUsuarioAtual();
     List<AnotacaoResponse> responses = useCase.listar(usuarioId, sessaoId, data)
         .stream()
         .map(AnotacaoResponse::de)
@@ -53,7 +53,7 @@ public class AnotacaoController {
 
   @GetMapping("/{id}")
   public ResponseEntity<AnotacaoResponse> buscarPorId(@PathVariable UUID id) {
-    UUID usuarioId = usuarioAtualPort.getUsuarioId();
+    UUID usuarioId = identidade.obterUsuarioAtual();
     Anotacao anotacao = useCase.buscarPorId(usuarioId, id);
     return ResponseEntity.ok(AnotacaoResponse.de(anotacao));
   }
@@ -62,7 +62,7 @@ public class AnotacaoController {
   public ResponseEntity<AnotacaoResponse> editar(
       @PathVariable UUID id,
       @Valid @RequestBody EditarAnotacaoRequest request) {
-    UUID usuarioId = usuarioAtualPort.getUsuarioId();
+    UUID usuarioId = identidade.obterUsuarioAtual();
     EditarAnotacaoCommand comando = new EditarAnotacaoCommand(request.conteudo());
     Anotacao atualizada = useCase.editar(usuarioId, id, comando);
     return ResponseEntity.ok(AnotacaoResponse.de(atualizada));
@@ -70,7 +70,7 @@ public class AnotacaoController {
 
   @DeleteMapping("/{id}")
   public ResponseEntity<Void> apagar(@PathVariable UUID id) {
-    UUID usuarioId = usuarioAtualPort.getUsuarioId();
+    UUID usuarioId = identidade.obterUsuarioAtual();
     useCase.apagar(usuarioId, id);
     return ResponseEntity.noContent().build();
   }
