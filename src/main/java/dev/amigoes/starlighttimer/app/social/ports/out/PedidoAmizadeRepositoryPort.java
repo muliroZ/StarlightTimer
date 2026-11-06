@@ -3,6 +3,8 @@ package dev.amigoes.starlighttimer.app.social.ports.out;
 import dev.amigoes.starlighttimer.domain.social.entities.PedidoAmizade;
 
 import java.util.Optional;
+import java.util.List;
+import java.time.Instant;
 import java.util.UUID;
 
 public interface PedidoAmizadeRepositoryPort {
@@ -10,6 +12,9 @@ public interface PedidoAmizadeRepositoryPort {
     void bloquearPar(UUID primeiro, UUID segundo);
 
     Optional<PedidoAmizade> buscarPorId(UUID id);
+    List<PedidoAmizade> listarPendentesRecebidos(UUID usuarioId);
+    List<PedidoAmizade> listarPendentesEnviados(UUID usuarioId);
+    void cancelarPendentesEntre(UUID primeiro, UUID segundo, Instant respondidoEm);
 
     void criar(PedidoAmizade pedido);
 

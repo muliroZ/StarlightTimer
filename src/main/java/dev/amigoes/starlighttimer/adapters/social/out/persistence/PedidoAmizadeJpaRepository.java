@@ -7,9 +7,26 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public interface PedidoAmizadeJpaRepository extends JpaRepository<PedidoAmizadeEntity, UUID> {
+    List<PedidoAmizadeEntity> findByDestinatarioIdAndStatusOrderByEnviadoEmDesc(UUID destinatarioId, StatusPedidoAmizade status);
+
+    List<PedidoAmizadeEntity> findByRemetenteIdAndStatusOrderByEnviadoEmDesc(UUID remetenteId, StatusPedidoAmizade status);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+            update PedidoAmizadeEntity p set p.status = :cancelado, p.respondidoEm = :respondidoEm
+            where p.status = :pendente and
+            ((p.remetenteId = :primeiro and p.destinatarioId = :segundo)
+              or (p.remetenteId = :segundo and p.destinatarioId = :primeiro))
+            """)
+    int cancelarPendentesEntre(@Param("primeiro") UUID primeiro, @Param("segundo") UUID segundo,
+                               @Param("pendente") StatusPedidoAmizade pendente,
+                               @Param("cancelado") StatusPedidoAmizade cancelado,
+                               @Param("respondidoEm") Instant respondidoEm);
+
     @Modifying(flushAutomatically = true, clearAutomatically = true)
     @Query("""
             update PedidoAmizadeEntity p set p.status = :aceito

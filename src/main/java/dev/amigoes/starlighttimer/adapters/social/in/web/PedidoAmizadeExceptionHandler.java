@@ -11,7 +11,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@RestControllerAdvice(assignableTypes = PedidoAmizadeController.class)
+@RestControllerAdvice(assignableTypes = {PedidoAmizadeController.class, CirculoSocialController.class})
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class PedidoAmizadeExceptionHandler {
     @ExceptionHandler(RecursoNaoEncontradoException.class)

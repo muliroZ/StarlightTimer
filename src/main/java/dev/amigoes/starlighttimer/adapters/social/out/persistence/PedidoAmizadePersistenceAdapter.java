@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.List;
+import java.time.Instant;
 import java.util.UUID;
 
 @Repository
@@ -52,6 +54,25 @@ public class PedidoAmizadePersistenceAdapter implements PedidoAmizadeRepositoryP
             entityManager.detach(entity);
             return pedido;
         });
+    }
+
+    @Override
+    public List<PedidoAmizade> listarPendentesRecebidos(UUID usuarioId) {
+        return pedidos.findByDestinatarioIdAndStatusOrderByEnviadoEmDesc(usuarioId, StatusPedidoAmizade.PENDENTE)
+                .stream().map(mapper::paraDominio).toList();
+    }
+
+    @Override
+    public List<PedidoAmizade> listarPendentesEnviados(UUID usuarioId) {
+        return pedidos.findByRemetenteIdAndStatusOrderByEnviadoEmDesc(usuarioId, StatusPedidoAmizade.PENDENTE)
+                .stream().map(mapper::paraDominio).toList();
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void cancelarPendentesEntre(UUID primeiro, UUID segundo, Instant respondidoEm) {
+        pedidos.cancelarPendentesEntre(primeiro, segundo, StatusPedidoAmizade.PENDENTE,
+                StatusPedidoAmizade.CANCELADO, respondidoEm);
     }
 
     @Override

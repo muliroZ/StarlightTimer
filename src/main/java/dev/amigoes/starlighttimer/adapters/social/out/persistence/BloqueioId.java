@@ -15,6 +15,11 @@ import java.util.UUID;
 @EqualsAndHashCode
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BloqueioId implements Serializable {
+    public BloqueioId(UUID usuarioId, UUID bloqueadoId) {
+        this.usuarioId = usuarioId;
+        this.bloqueadoId = bloqueadoId;
+    }
+
     @Column(name = "usuario_id", nullable = false)
     private UUID usuarioId;
 

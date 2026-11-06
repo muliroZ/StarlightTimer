@@ -7,4 +7,6 @@ import java.util.UUID;
 
 public interface BloqueioRepositoryPort {
     List<Bloqueio> buscarEntre(UUID primeiro, UUID segundo);
+    void criar(UUID usuarioId, UUID bloqueadoId);
+    void remover(UUID usuarioId, UUID bloqueadoId);
 }
