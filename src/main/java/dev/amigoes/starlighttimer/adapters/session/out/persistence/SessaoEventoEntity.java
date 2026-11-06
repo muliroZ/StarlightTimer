@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "sessao_evento")
-public class SessaoEntity {
+public class SessaoEventoEntity {
 
   @Id
   private UUID id;
@@ -34,11 +34,11 @@ public class SessaoEntity {
   @Column(name = "origem", nullable = false, length = 25)
   private OrigemEvento origem;
 
-  protected SessaoEventoEntity() {
+  protected  SessaoEventoEntity() {
   }
 
   public SessaoEventoEntity(UUID id, UUID sessaoId, String payload, TipoEvento tipoEvento,
-                            OffsetDateTime ocorridoEm, OffsetDateTime reportadoEm, OrigemEvento origem) {
+                                 OffsetDateTime ocorridoEm, OffsetDateTime reportadoEm, OrigemEvento origem) {
     this.id = id;
     this.sessaoId = sessaoId;
     this.payload = payload;
@@ -47,32 +47,18 @@ public class SessaoEntity {
     this.reportadoEm = reportadoEm;
     this.origem = origem;
   }
-  public UUID getId() {
-    return id;
-  }
+  public UUID getId() {return id;}
 
-  public UUID getSessaoId() {
-    return sessaoId;
-  }
+  public UUID getSessaoId() {return sessaoId;}
 
-  public String getPayload() {
-    return payload;
-  }
+  public String getPayload() {return payload;}
 
-  public TipoEvento getTipoEvento() {
-    return tipoEvento;
-  }
+  public TipoEvento getTipoEvento() {return tipoEvento;}
 
-  public OffsetDateTime getOcorridoEm() {
-    return ocorridoEm;
-  }
+  public OffsetDateTime getOcorridoEm() {return ocorridoEm;}
 
-  public OffsetDateTime getReportadoEm() {
-    return reportadoEm;
-  }
+  public OffsetDateTime getReportadoEm() {return reportadoEm;}
 
-  public OrigemEvento getOrigem() {
-    return origem;
-  }
+  public OrigemEvento getOrigem() {return origem;}
 
 }
