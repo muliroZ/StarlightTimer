@@ -127,6 +127,22 @@ Para empacotar ou executar a verificação de build:
 
 Use verificação manual: requisições HTTP, consultas SQL e inspeção de logs, com resultado esperado e observado no PR. Não altere arquivos de teste, dependências ou plugins de teste durante essa restrição.
 
+### Acesso local sem JWT
+
+Sem perfil ativo explícito, a API usa o perfil `local`. Nesse perfil, ela cria no startup um usuário padrão (`00000000-0000-0000-0000-000000000001`) com perfil e configurações. Os endpoints de negócio usam esse usuário sem exigir autenticação nem cabeçalhos.
+
+Para criar outro usuário local, chame `POST /api/v1/usuarios/local` com `email`, `nomeExibido` e `fusoHorario` IANA. A resposta `201` contém o `id`. Envie `X-Usuario-Id: <id>` nas chamadas seguintes para selecionar esse usuário. O cabeçalho é opcional e só funciona no perfil `local`; IDs inexistentes ou inativos recebem `404`. Fora desse perfil, o adaptador atual continua devolvendo `401` até a integração de JWT. Não use o perfil `local` em ambiente exposto a usuários externos.
+
+```bash
+curl -i http://localhost:8081/api/v1/me/perfil
+curl -i -X POST http://localhost:8081/api/v1/usuarios/local \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"outra-pessoa@example.test","nomeExibido":"Outra pessoa","fusoHorario":"America/Recife"}'
+curl -i http://localhost:8081/api/v1/me/perfil -H 'X-Usuario-Id: <id-retornado>'
+```
+
+Para verificar um CRUD, crie uma anotação com `POST /api/v1/anotacoes` (`conteudo` e `dataAnotacao`), consulte com `GET /api/v1/anotacoes?data=YYYY-MM-DD`, edite com `PATCH /api/v1/anotacoes/{id}` (`conteudo`) e remova com `DELETE /api/v1/anotacoes/{id}`. Use o mesmo cabeçalho nas quatro chamadas se quiser operar como o segundo usuário. As rotas locais também aparecem em `/swagger-ui.html`.
+
 ## 5. Contribuição
 
 - Use os templates de issue existentes. Preserve os títulos dos campos usados pela triagem automática.
@@ -186,19 +202,19 @@ Para verificar manualmente quando #31 estiver integrado: conclua um foco de 25 m
 
 `GET /api/v1/me/sessao-ativa` devolve 200 ou 204. `GET /api/v1/sessoes` aceita `pagina` a partir de zero, `tamanho` de 1 a 100 e filtros opcionais `dataInicio` e `dataFim` em ISO 8601, sobre `dia_local`. O resultado contém `itens`, `pagina`, `tamanho` e `proximaPagina`. O acesso a uma sessão de outro usuário devolve 404.
 
-A autenticação JWT ainda não está integrada: atualmente esses endpoints devolvem 401. Para verificar manualmente depois da integração, inicie uma sessão e confira `INICIADA` e `dia_local` no banco; repita o POST e confira 409 com o mesmo ID; pause, retome e confira `ocorrido_em` e `reportado_em` distintos; tente concluir cedo e confira 409 e `CONCLUSAO_REJEITADA`; conclua no tempo e compare a recompensa com `ganho_xp`; depois confira a recuperação, a paginação filtrada, o 404 para sessão alheia e o encerramento pelo job. A compilação local usa `bash ./mvnw -DskipTests compile` enquanto o wrapper não tiver permissão de execução.
+A autenticação JWT ainda não está integrada. No perfil `local`, esses endpoints usam o usuário padrão ou o UUID selecionado pelo cabeçalho opcional. Para verificar manualmente, inicie uma sessão e confira `INICIADA` e `dia_local` no banco; repita o POST e confira 409 com o mesmo ID; pause, retome e confira `ocorrido_em` e `reportado_em` distintos; tente concluir cedo e confira 409 e `CONCLUSAO_REJEITADA`; conclua no tempo e compare a recompensa com `ganho_xp`; depois confira a recuperação, a paginação filtrada, o 404 para sessão alheia e o encerramento pelo job. A compilação local usa `sh ./mvnw -DskipTests compile` enquanto o wrapper não tiver permissão de execução.
 
-`GET /api/v1/me/progressao` retorna `401` até a integração de JWT. O cabeçalho provisório `X-Usuario-Id` foi desativado porque não comprova a identidade. Quando a autenticação estiver disponível, a resposta contém `nivel`, `patente` (`codigo`, `nome`, `imagemTitulo`), `xpTotal`, `xpAtual` dentro do nível, `xpDoProximoNivel` como limite acumulado e `xpParaProximoNivel` como saldo faltante. No nível 60, os dois campos de próximo nível são `null`. Também devolve `estrelasForjadas`, `segundosEmOrbit`, `horasEmOrbit` com duas casas decimais e `orbitAtual` em dias lógicos consecutivos. Para cada insígnia, a resposta inclui código, nome, descrição, ícone, contagem atual, alvo e instante de desbloqueio; para cada constelação, inclui o total de estrelas, a meta de estrelas, o número de insígnias do grupo desbloqueadas, a meta de insígnias e o instante de desbloqueio.
+`GET /api/v1/me/progressao` pode ser consultado no perfil `local`, sem login. A resposta contém `nivel`, `patente` (`codigo`, `nome`, `imagemTitulo`), `xpTotal`, `xpAtual` dentro do nível, `xpDoProximoNivel` como limite acumulado e `xpParaProximoNivel` como saldo faltante. No nível 60, os dois campos de próximo nível são `null`. Também devolve `estrelasForjadas`, `segundosEmOrbit`, `horasEmOrbit` com duas casas decimais e `orbitAtual` em dias lógicos consecutivos. Para cada insígnia, a resposta inclui código, nome, descrição, ícone, contagem atual, alvo e instante de desbloqueio; para cada constelação, inclui o total de estrelas, a meta de estrelas, o número de insígnias do grupo desbloqueadas, a meta de insígnias e o instante de desbloqueio.
 
 O caso de uso lê o perfil e os desbloqueios do PostgreSQL, os catálogos pelas portas existentes e as sessões concluídas pelo histórico da #32. `orbitAtual` considera o dia lógico vigente no fuso IANA do perfil, com virada às 04:00; enquanto o dia ainda não tem foco, a sequência encerrada no dia anterior continua visível. A data `sessao.dia_local` já foi fixada quando a sessão começou e não é recalculada após troca de fuso. A ausência de sessões produz nível 1, patente inicial, zero estrelas, zero tempo e zero Orbit, com os catálogos completos e progresso zero. Um UUID sem perfil recebe `404` em `ProblemDetail`.
 
-Verificação manual atual: com a API em execução, chame `curl -i -H 'X-Usuario-Id: <uuid>' http://localhost:8081/api/v1/me/progressao` e confirme `401`. Antes da desativação do cabeçalho provisório, num banco local migrado até V6, um perfil sem sessões retornou nível 1, patente `STARGAZER`, XP zero, 22 insígnias e seis constelações. Duas sessões de foco concluídas em `dia_local` consecutivos retornaram duas estrelas, 3.000 segundos, 0,83 hora e Orbit de dois dias. Um UUID sem perfil retornou `404`. Após a integração de JWT e da conclusão de sessão na API (#31), confira XP e desbloqueios contra `perfil`, `sessao`, `insignia_usuario` e `ganho_xp`; para a virada, consulte antes e depois das 04:00 no fuso do perfil.
+Verificação manual: com a API no perfil `local`, chame `curl -i http://localhost:8081/api/v1/me/progressao`. Num banco local migrado até V6, um perfil sem sessões deve retornar nível 1, patente `STARGAZER`, XP zero, 22 insígnias e seis constelações. Duas sessões de foco concluídas em `dia_local` consecutivos devem retornar duas estrelas, 3.000 segundos, 0,83 hora e Orbit de dois dias. Um UUID inexistente no cabeçalho recebe `404`. Confira XP e desbloqueios contra `perfil`, `sessao`, `insignia_usuario` e `ganho_xp`; para a virada, consulte antes e depois das 04:00 no fuso do perfil.
 
 ### Perfil e configurações do próprio usuário (#28)
 
-`GET` e `PATCH /api/v1/me/perfil` consultam e alteram nome de exibição, avatar, bio e fuso horário. O GET inclui `xpTotal`; o PATCH não altera esse cache do ledger. `GET` e `PATCH /api/v1/me/configuracoes` consultam e alteram foco, pausa, início automático da pausa e som. O fuso e as durações são validados pelo domínio. Enquanto JWT não estiver integrado, os quatro endpoints retornam `401`, mesmo com um cabeçalho de ID enviado pelo cliente.
+`GET` e `PATCH /api/v1/me/perfil` consultam e alteram nome de exibição, avatar, bio e fuso horário. O GET inclui `xpTotal`; o PATCH não altera esse cache do ledger. `GET` e `PATCH /api/v1/me/configuracoes` consultam e alteram foco, pausa, início automático da pausa e som. O fuso e as durações são validados pelo domínio. No perfil `local`, os quatro endpoints usam o usuário padrão ou o UUID do cabeçalho opcional.
 
-Verificação manual atual: envie GET e PATCH aos quatro endpoints, com e sem `X-Usuario-Id`, e confirme `401` em `ProblemDetail`. Após a integração de JWT, confirme `404` para um usuário autenticado sem a respectiva linha, `400` para fuso ou durações inválidos e que editar o perfil não altera `perfil.xp_total` nem cria uma linha em `ganho_xp`.
+Verificação manual: envie GET e PATCH aos quatro endpoints, com e sem `X-Usuario-Id`, e confirme que os dados pertencem ao usuário selecionado. Confira `404` para UUID inexistente, `400` para fuso ou durações inválidos e que editar o perfil não altera `perfil.xp_total` nem cria uma linha em `ganho_xp`.
 
 ## 9. Pedidos de amizade
 
@@ -206,7 +222,7 @@ Verificação manual atual: envie GET e PATCH aos quatro endpoints, com e sem `X
 
 `PATCH /api/v1/amizades/pedidos/{id}` recebe `acao` (`ACEITAR`, `RECUSAR` ou `CANCELAR`). Só o destinatário pode aceitar ou recusar; só o remetente pode cancelar. O serviço valida a transição de estado antes de atualizar a linha. Na aceitação, a aplicação altera somente `pedido_amizade.status`; o trigger da migration V5 cria a `amizade` com os UUIDs em ordem canônica e remove o pedido na mesma transação. O adaptador limpa o contexto JPA após o `UPDATE` e consulta a amizade para a resposta. Recusa e cancelamento mantêm o pedido com o status e `respondido_em` atualizados.
 
-As ações usam `ConsultarIdentidadePort` para obter o usuário atual. O cabeçalho provisório `X-Usuario-Id` foi desativado em `dev` porque não comprova identidade. Até a integração de JWT (BL-05), os dois endpoints retornam `401`, mesmo que o cliente envie esse cabeçalho. Depois da integração, a identidade virá do token validado. Verifique manualmente o `401` com e sem `X-Usuario-Id`; então, com JWT disponível, confira envio, aceite, recusa, cancelamento e o efeito do trigger no PostgreSQL.
+As ações usam `ConsultarIdentidadePort` para obter o usuário atual. No perfil `local`, crie um segundo usuário pelo endpoint local e selecione cada participante pelo cabeçalho `X-Usuario-Id`. Verifique envio, aceite, recusa, cancelamento e o efeito do trigger no PostgreSQL. Fora do perfil `local`, a identidade continua indisponível até BL-05.
 
 ### Círculo social (#34)
 
@@ -214,10 +230,10 @@ As ações usam `ConsultarIdentidadePort` para obter o usuário atual. O cabeça
 
 `DELETE /api/v1/amizades/{id}` permite que qualquer participante remova a amizade e devolve `204`; para um ID inexistente ou de outra pessoa, devolve `404`. `POST /api/v1/me/bloqueios/{usuarioId}` grava o bloqueio, remove a amizade e marca os pedidos pendentes do par como `CANCELADO` com `respondido_em`, tudo na mesma transação. `DELETE` no mesmo caminho remove somente o bloqueio: não recria amizade nem pedido. Bloquear e desbloquear novamente devolvem `204`. Bloquear a si mesmo devolve `422`; bloquear um usuário inexistente ou inativo devolve `404`. As mutações usam o lock por par de usuários já adotado nos pedidos de amizade.
 
-Enquanto JWT não estiver integrado, os cinco endpoints devolvem `401`, inclusive com `X-Usuario-Id`. Após a integração, verifique com dois usuários: aceite um pedido, consulte as duas listas, desfaça a amizade de cada lado, crie novo pedido e bloqueie o par. Confira no PostgreSQL que a amizade sumiu, que o pedido passou a `CANCELADO` com `respondido_em` e que `lista_bloqueio` manteve a linha. Desbloqueie e confirme que a amizade continua ausente.
+No perfil `local`, verifique com dois usuários: aceite um pedido, consulte as duas listas, desfaça a amizade de cada lado, crie novo pedido e bloqueie o par. Confira no PostgreSQL que a amizade sumiu, que o pedido passou a `CANCELADO` com `respondido_em` e que `lista_bloqueio` manteve a linha. Desbloqueie e confirme que a amizade continua ausente.
 
 ## 10. Anotações privadas
 
-`POST`, `GET`, `PATCH` e `DELETE /api/v1/anotacoes` usam `ConsultarIdentidadePort` para obter o usuário atual. Até a integração de JWT (BL-05), todos retornam `401`, inclusive com `X-Usuario-Id`; o cabeçalho enviado pelo cliente não comprova identidade. Após a integração, a leitura, edição e exclusão de uma anotação alheia retornam `404`. A criação e a listagem por sessão também retornam `404` quando a sessão não pertence ao usuário autenticado.
+`POST`, `GET`, `PATCH` e `DELETE /api/v1/anotacoes` usam `ConsultarIdentidadePort` para obter o usuário atual. No perfil `local`, o cabeçalho `X-Usuario-Id` seleciona um usuário existente sem autenticação. A leitura, edição e exclusão de uma anotação alheia retornam `404`. A criação e a listagem por sessão também retornam `404` quando a sessão não pertence ao usuário selecionado.
 
-`GET /api/v1/anotacoes` exige exatamente um filtro: `sessaoId` ou `data` no formato ISO `YYYY-MM-DD`. Enviar os dois filtros ou nenhum retorna `400`. Para verificar manualmente agora, chame os quatro verbos com e sem `X-Usuario-Id` e confirme `401`. Após JWT, crie anotações de dia e de sessão com dois usuários, confira que cada um só acessa as próprias linhas e valide os retornos `400` e `404` descritos acima.
+`GET /api/v1/anotacoes` exige exatamente um filtro: `sessaoId` ou `data` no formato ISO `YYYY-MM-DD`. Enviar os dois filtros ou nenhum retorna `400`. Para verificar manualmente, crie anotações de dia e de sessão com dois usuários locais, confira que cada um só acessa as próprias linhas e valide os retornos `400` e `404` descritos acima.
