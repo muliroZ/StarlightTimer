@@ -1,6 +1,6 @@
 package dev.amigoes.starlighttimer.domain.identity.entities;
 
-import dev.amigoes.starlighttimer.domain.shared.exceptions.DomainValidationException;
+import dev.amigoes.starlighttimer.domain.shared.exceptions.RegraDeNegocioException;
 
 import java.time.ZoneId;
 import java.util.UUID;
@@ -24,10 +24,10 @@ public class Perfil {
 
     public void setFusoHorario(String fusoHorario) {
         if (fusoHorario == null || fusoHorario.isBlank()) {
-            throw new DomainValidationException("O fuso horário nao pode ser nulo ou vazio");
+            throw new RegraDeNegocioException("O fuso horário nao pode ser nulo ou vazio");
         }
         if (!ZoneId.getAvailableZoneIds().contains(fusoHorario)) {
-            throw new DomainValidationException("Fuso horario invalido. Deve ser uma zona IANA valida");
+            throw new RegraDeNegocioException("Fuso horario invalido. Deve ser uma zona IANA valida");
         }
         this.fusoHorario = fusoHorario;
     }

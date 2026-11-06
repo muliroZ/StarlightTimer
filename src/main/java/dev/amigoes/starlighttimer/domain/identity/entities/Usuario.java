@@ -1,6 +1,6 @@
 package dev.amigoes.starlighttimer.domain.identity.entities;
 
-import dev.amigoes.starlighttimer.domain.shared.exceptions.DomainValidationException;
+import dev.amigoes.starlighttimer.domain.shared.exceptions.RegraDeNegocioException;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -16,13 +16,13 @@ public class Usuario {
 
     public Usuario(UUID id, String email, String status, Instant criadoEm, Instant excluidoEm, Perfil perfil, ConfiguracoesUsuario configuracoes) {
         if (id == null) {
-            throw new DomainValidationException("O ID do usuario nao pode ser nulo");
+            throw new RegraDeNegocioException("O ID do usuario nao pode ser nulo");
         }
         if (perfil != null && !id.equals(perfil.getUsuarioId())) {
-            throw new DomainValidationException("O Perfil deve pertencer ao mesmo usuario");
+            throw new RegraDeNegocioException("O Perfil deve pertencer ao mesmo usuario");
         }
         if (configuracoes != null && !id.equals(configuracoes.getUsuarioId())) {
-            throw new DomainValidationException("As ConfiguracoesUsuario devem pertencer ao mesmo usuario");
+            throw new RegraDeNegocioException("As ConfiguracoesUsuario devem pertencer ao mesmo usuario");
         }
 
         this.id = id;

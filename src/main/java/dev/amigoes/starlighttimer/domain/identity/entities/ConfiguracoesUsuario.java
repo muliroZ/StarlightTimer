@@ -1,6 +1,6 @@
 package dev.amigoes.starlighttimer.domain.identity.entities;
 
-import dev.amigoes.starlighttimer.domain.shared.exceptions.DomainValidationException;
+import dev.amigoes.starlighttimer.domain.shared.exceptions.RegraDeNegocioException;
 
 import java.util.UUID;
 
@@ -24,7 +24,7 @@ public class ConfiguracoesUsuario {
         int tempoMaximo = 5400;
         int tempoMultiplo = 300;
         if (focoEmSegundos < tempoMinimo || focoEmSegundos > tempoMaximo || (focoEmSegundos % tempoMultiplo != 0)) {
-            throw new DomainValidationException("Tempo invalido detectado");
+            throw new RegraDeNegocioException("Tempo invalido detectado");
         }
         this.focoEmSegundos = focoEmSegundos;
     }
@@ -33,7 +33,7 @@ public class ConfiguracoesUsuario {
         int tempoMinimo = 180;
         int tempoMaximo = 900;
         if (pausaEmSegundos < tempoMinimo || pausaEmSegundos > tempoMaximo) {
-            throw new DomainValidationException("Tempo invalido detectado");
+            throw new RegraDeNegocioException("Tempo invalido detectado");
         }
         this.pausaEmSegundos = pausaEmSegundos;
     }
