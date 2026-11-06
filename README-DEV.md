@@ -189,3 +189,11 @@ Verificação manual atual: com a API em execução, chame `curl -i -H 'X-Usuari
 `GET` e `PATCH /api/v1/me/perfil` consultam e alteram nome de exibição, avatar, bio e fuso horário. O GET inclui `xpTotal`; o PATCH não altera esse cache do ledger. `GET` e `PATCH /api/v1/me/configuracoes` consultam e alteram foco, pausa, início automático da pausa e som. O fuso e as durações são validados pelo domínio. Enquanto JWT não estiver integrado, os quatro endpoints retornam `401`, mesmo com um cabeçalho de ID enviado pelo cliente.
 
 Verificação manual atual: envie GET e PATCH aos quatro endpoints, com e sem `X-Usuario-Id`, e confirme `401` em `ProblemDetail`. Após a integração de JWT, confirme `404` para um usuário autenticado sem a respectiva linha, `400` para fuso ou durações inválidos e que editar o perfil não altera `perfil.xp_total` nem cria uma linha em `ganho_xp`.
+
+## 9. Pedidos de amizade
+
+`POST /api/v1/amizades/pedidos` recebe `destinatarioId` (UUID) e cria um pedido `PENDENTE` para o usuário atual. Um destinatário inexistente retorna 404; um pedido pendente já existente para o par, em qualquer direção, retorna 409. A consulta de bloqueio e amizade considera as duas direções do par. A persistência serializa operações do mesmo par com um lock transacional no PostgreSQL.
+
+`PATCH /api/v1/amizades/pedidos/{id}` recebe `acao` (`ACEITAR`, `RECUSAR` ou `CANCELAR`). Só o destinatário pode aceitar ou recusar; só o remetente pode cancelar. O serviço valida a transição de estado antes de atualizar a linha. Na aceitação, a aplicação altera somente `pedido_amizade.status`; o trigger da migration V5 cria a `amizade` com os UUIDs em ordem canônica e remove o pedido na mesma transação. O adaptador limpa o contexto JPA após o `UPDATE` e consulta a amizade para a resposta. Recusa e cancelamento mantêm o pedido com o status e `respondido_em` atualizados.
+
+As ações usam `ConsultarIdentidadePort` para obter o usuário atual. O cabeçalho provisório `X-Usuario-Id` foi desativado em `dev` porque não comprova identidade. Até a integração de JWT (BL-05), os dois endpoints retornam `401`, mesmo que o cliente envie esse cabeçalho. Depois da integração, a identidade virá do token validado. Verifique manualmente o `401` com e sem `X-Usuario-Id`; então, com JWT disponível, confira envio, aceite, recusa, cancelamento e o efeito do trigger no PostgreSQL.
