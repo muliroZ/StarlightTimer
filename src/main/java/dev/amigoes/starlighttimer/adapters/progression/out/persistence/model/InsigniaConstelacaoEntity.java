@@ -7,6 +7,7 @@ import lombok.*;
 @Table(name = "insignia_constelacao")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class InsigniaConstelacaoEntity {
     @EmbeddedId private InsigniaConstelacaoId id;
 }

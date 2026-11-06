@@ -12,4 +12,6 @@ public interface UsuarioRepositoryPort {
     Optional<Usuario> buscarPorId(UUID id);
 
     void criar(Usuario usuario);
+
+    boolean existePorId(UUID id);
 }
