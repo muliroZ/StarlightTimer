@@ -3,6 +3,7 @@ package dev.amigoes.starlighttimer.adapters.shared.in.web;
 import dev.amigoes.starlighttimer.domain.session.exceptions.ConclusaoAntecipadaException;
 import dev.amigoes.starlighttimer.domain.session.exceptions.TransicaoInvalidaException;
 import dev.amigoes.starlighttimer.domain.shared.exceptions.RegraDeNegocioException;
+import dev.amigoes.starlighttimer.domain.shared.exceptions.RecursoNaoEncontradoException;
 import dev.amigoes.starlighttimer.domain.identity.exceptions.UsuarioNaoAutenticadoException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -11,6 +12,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(RecursoNaoEncontradoException.class)
+    public ProblemDetail recursoNaoEncontrado(RecursoNaoEncontradoException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle("Recurso não encontrado");
+        return problem;
+    }
 
     @ExceptionHandler(UsuarioNaoAutenticadoException.class)
     public ProblemDetail handleUsuarioNaoAutenticado(UsuarioNaoAutenticadoException ex) {
