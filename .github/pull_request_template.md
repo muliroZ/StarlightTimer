@@ -17,7 +17,7 @@ Closes #
 - [ ] Passos manuais:
   1.
   2.
-- [ ] Não se aplica (Ex.: documentação)
+- [ ] Outros: 
 
 ## Altera algo na documentação
 <!--Marque "Sim" caso o PR tenha criado, atualizado ou excluído algo na documentação-->
