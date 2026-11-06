@@ -40,10 +40,10 @@ public class PedidoAmizadeService implements GerenciarPedidosAmizadePort {
         UUID remetenteId = identidade.obterUsuarioAtual();
         PedidoAmizade pedido = PedidoAmizade.criarNovo(UUID.randomUUID(), remetenteId,
                 destinatarioId, relogio.instant());
-        if (!identidade.existeUsuario(remetenteId)) {
+        if (!identidade.existeUsuarioAtivo(remetenteId)) {
             throw new RecursoNaoEncontradoException("Usuario atual nao encontrado");
         }
-        if (!identidade.existeUsuario(destinatarioId)) {
+        if (!identidade.existeUsuarioAtivo(destinatarioId)) {
             throw new RecursoNaoEncontradoException("Destinatario nao encontrado");
         }
         pedidos.bloquearPar(remetenteId, destinatarioId);

@@ -13,5 +13,5 @@ public interface UsuarioRepositoryPort {
 
     void criar(Usuario usuario);
 
-    boolean existePorId(UUID id);
+    boolean existeAtivoPorId(UUID id);
 }
