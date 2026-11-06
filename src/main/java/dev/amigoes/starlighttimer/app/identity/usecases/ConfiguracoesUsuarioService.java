@@ -2,10 +2,10 @@ package dev.amigoes.starlighttimer.app.identity.usecases;
 
 import dev.amigoes.starlighttimer.app.identity.ports.in.AtualizarConfiguracoesUsuarioUseCase;
 import dev.amigoes.starlighttimer.app.identity.ports.in.ObterConfiguracoesUsuarioUseCase;
-import dev.amigoes.starlighttimer.app.identity.ports.in.UsuarioAtualPort;
+import dev.amigoes.starlighttimer.app.identity.ports.out.UsuarioAtualPort;
 import dev.amigoes.starlighttimer.app.identity.ports.out.ConfiguracoesUsuarioRepositoryPort;
-import dev.amigoes.starlighttimer.domain.shared.exceptions.DomainValidationException;
-import dev.amigoes.starlighttimer.domain.social.entities.ConfiguracoesUsuario;
+import dev.amigoes.starlighttimer.domain.shared.exceptions.RecursoNaoEncontradoException;
+import dev.amigoes.starlighttimer.domain.identity.entities.ConfiguracoesUsuario;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,9 +25,9 @@ public class ConfiguracoesUsuarioService implements ObterConfiguracoesUsuarioUse
     @Override
     @Transactional(readOnly = true)
     public ConfiguracoesUsuario obterConfiguracoes() {
-        UUID usuarioId = usuarioAtualPort.obterUsuarioIdAtual();
+        UUID usuarioId = usuarioAtualPort.getUsuarioId();
         return configuracoesRepositoryPort.buscarPorUsuarioId(usuarioId)
-                .orElseThrow(() -> new DomainValidationException("Configurações não encontradas para o usuário informado."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Configurações não encontradas para o usuário informado."));
     }
 
     @Override

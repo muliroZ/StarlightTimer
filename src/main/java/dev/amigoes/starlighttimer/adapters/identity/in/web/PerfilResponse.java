@@ -1,6 +1,6 @@
 package dev.amigoes.starlighttimer.adapters.identity.in.web;
 
-import dev.amigoes.starlighttimer.domain.social.entities.Perfil;
+import dev.amigoes.starlighttimer.domain.identity.entities.Perfil;
 
 import java.util.UUID;
 

@@ -1,6 +1,6 @@
 package dev.amigoes.starlighttimer.app.identity.ports.out;
 
-import dev.amigoes.starlighttimer.domain.social.entities.Perfil;
+import dev.amigoes.starlighttimer.domain.identity.entities.Perfil;
 
 import java.util.Optional;
 import java.util.UUID;

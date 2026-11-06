@@ -2,10 +2,10 @@ package dev.amigoes.starlighttimer.app.identity.usecases;
 
 import dev.amigoes.starlighttimer.app.identity.ports.in.AtualizarPerfilUseCase;
 import dev.amigoes.starlighttimer.app.identity.ports.in.ObterPerfilUseCase;
-import dev.amigoes.starlighttimer.app.identity.ports.in.UsuarioAtualPort;
+import dev.amigoes.starlighttimer.app.identity.ports.out.UsuarioAtualPort;
 import dev.amigoes.starlighttimer.app.identity.ports.out.PerfilRepositoryPort;
-import dev.amigoes.starlighttimer.domain.shared.exceptions.DomainValidationException;
-import dev.amigoes.starlighttimer.domain.social.entities.Perfil;
+import dev.amigoes.starlighttimer.domain.shared.exceptions.RecursoNaoEncontradoException;
+import dev.amigoes.starlighttimer.domain.identity.entities.Perfil;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,9 +25,9 @@ public class PerfilService implements ObterPerfilUseCase, AtualizarPerfilUseCase
     @Override
     @Transactional(readOnly = true)
     public Perfil obterPerfil() {
-        UUID usuarioId = usuarioAtualPort.obterUsuarioIdAtual();
+        UUID usuarioId = usuarioAtualPort.getUsuarioId();
         return perfilRepositoryPort.buscarPorUsuarioId(usuarioId)
-                .orElseThrow(() -> new DomainValidationException("Perfil não encontrado para o usuário informado."));
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Perfil não encontrado para o usuário informado."));
     }
 
     @Override

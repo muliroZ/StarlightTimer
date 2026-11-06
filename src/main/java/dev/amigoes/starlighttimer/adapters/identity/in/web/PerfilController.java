@@ -2,7 +2,7 @@ package dev.amigoes.starlighttimer.adapters.identity.in.web;
 
 import dev.amigoes.starlighttimer.app.identity.ports.in.AtualizarPerfilUseCase;
 import dev.amigoes.starlighttimer.app.identity.ports.in.ObterPerfilUseCase;
-import dev.amigoes.starlighttimer.domain.social.entities.Perfil;
+import dev.amigoes.starlighttimer.domain.identity.entities.Perfil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
