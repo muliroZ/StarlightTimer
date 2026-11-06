@@ -12,4 +12,5 @@ public interface AnotacaoRepositoryPort {
     Optional<Anotacao> buscarPorId(UUID id);
     List<Anotacao> buscarPorUsuarioESessao(UUID usuarioId, UUID sessaoId);
     List<Anotacao> buscarPorUsuarioEData(UUID usuarioId, LocalDate dataAnotacao);
+    void remover(UUID id);
 }

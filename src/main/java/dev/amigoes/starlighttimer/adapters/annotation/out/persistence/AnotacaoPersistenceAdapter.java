@@ -45,4 +45,9 @@ public class AnotacaoPersistenceAdapter implements AnotacaoRepositoryPort {
                 .map(AnotacaoMapper::paraDominio)
                 .toList();
     }
+
+    @Override
+    public void remover(UUID id) {
+        repositorioJpa.deleteById(id);
+    }
 }
