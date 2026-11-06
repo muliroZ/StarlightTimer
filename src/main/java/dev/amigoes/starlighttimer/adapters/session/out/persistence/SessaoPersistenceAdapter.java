@@ -5,7 +5,6 @@ import dev.amigoes.starlighttimer.domain.session.entities.Sessao;
 import dev.amigoes.starlighttimer.domain.session.entities.SessaoEvento;
 import dev.amigoes.starlighttimer.domain.session.enums.StatusSessao;
 import dev.amigoes.starlighttimer.domain.session.enums.TipoEvento;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,22 +30,17 @@ public class SessaoPersistenceAdapter implements SessaoRepositoryPort {
   @Override
   @Transactional
   public Sessao salvarComEvento(Sessao sessao, SessaoEvento evento) {
-    SessaoEntity sessaoEntity = SessaoMapper.paraEntidade(sessao);
-    sessaoRepository.save(sessaoEntity);
-
-    if (evento != null) {
-      SessaoEventoEntity eventoEntity = SessaoMapper.paraEntidade(evento);
-      eventoRepository.save(eventoEntity);
+    Objects.requireNonNull(sessao, "sessao e obrigatoria");
+    Objects.requireNonNull(evento, "evento e obrigatorio");
+    if (!sessao.getId().equals(evento.sessaoId())) {
+      throw new IllegalArgumentException("evento pertence a outra sessao");
     }
-
-    return sessao;
-  }
-
-  @Override
-  @Transactional
-  public Sessao salvar(Sessao sessao) {
     SessaoEntity sessaoEntity = SessaoMapper.paraEntidade(sessao);
     sessaoRepository.save(sessaoEntity);
+
+    SessaoEventoEntity eventoEntity = SessaoMapper.paraEntidade(evento);
+    eventoRepository.save(eventoEntity);
+
     return sessao;
   }
 
@@ -70,9 +64,10 @@ public class SessaoPersistenceAdapter implements SessaoRepositoryPort {
 
   @Override
   public List<Sessao> listarHistorico(UUID usuarioId, int limit, int offset) {
-    int page = offset / Math.max(1, limit);
-    PageRequest pageRequest = PageRequest.of(page, limit);
-    return sessaoRepository.findHistoricoByUsuarioId(usuarioId, pageRequest)
+    if (limit < 1 || offset < 0) {
+      throw new IllegalArgumentException("limit deve ser positivo e offset nao pode ser negativo");
+    }
+    return sessaoRepository.findHistoricoByUsuarioId(usuarioId, limit, offset)
         .stream()
         .map(this::reconstituirSessao)
         .toList();

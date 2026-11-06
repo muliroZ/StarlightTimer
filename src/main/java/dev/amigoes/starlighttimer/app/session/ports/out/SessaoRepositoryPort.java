@@ -12,8 +12,6 @@ import java.util.UUID;
 public interface SessaoRepositoryPort {
   Sessao salvarComEvento(Sessao sessao, SessaoEvento evento);
 
-  Sessao salvar(Sessao sessao);
-
   Optional<Sessao> buscarPorIdEUsuario(UUID id, UUID usuarioId);
 
   Optional<Sessao> buscarAtivaPorUsuario(UUID usuarioId);

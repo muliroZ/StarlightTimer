@@ -1,7 +1,6 @@
 package dev.amigoes.starlighttimer.adapters.session.out.persistence;
 
 import dev.amigoes.starlighttimer.domain.session.enums.StatusSessao;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,8 +19,11 @@ public interface SessaoJpaRepository extends JpaRepository<SessaoEntity, UUID> {
 
   Optional<SessaoEntity> findFirstByUsuarioIdAndStatusIn(UUID usuarioId, Collection<StatusSessao> statuses);
 
-  @Query("SELECT s FROM SessaoEntity s WHERE s.usuarioId = :usuarioId ORDER BY s.iniciadoEm DESC")
-  List<SessaoEntity> findHistoricoByUsuarioId(@Param("usuarioId") UUID usuarioId, Pageable pageable);
+  @Query(value = "SELECT * FROM sessao WHERE usuario_id = :usuarioId " +
+      "ORDER BY iniciado_em DESC, id DESC LIMIT :limit OFFSET :offset", nativeQuery = true)
+  List<SessaoEntity> findHistoricoByUsuarioId(@Param("usuarioId") UUID usuarioId,
+                                               @Param("limit") int limit,
+                                               @Param("offset") int offset);
 
   @Query("SELECT DISTINCT s.diaLocal FROM SessaoEntity s " +
       "WHERE s.usuarioId = :usuarioId " +

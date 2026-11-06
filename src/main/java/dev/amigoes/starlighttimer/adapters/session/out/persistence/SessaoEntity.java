@@ -8,6 +8,10 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -15,6 +19,9 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "sessao")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class SessaoEntity {
 
   @Id
@@ -49,41 +56,4 @@ public class SessaoEntity {
   @Column(name = "terminado_em")
   private OffsetDateTime terminadoEm;
 
-  protected SessaoEntity() {
-  }
-
-  public SessaoEntity(UUID id, UUID usuarioId, TipoSessao tipo, StatusSessao status,
-                      int duracaoPlanejada, int tempoDeFoco, int tempoDePausa,
-                      LocalDate diaLocal, OffsetDateTime iniciadoEm, OffsetDateTime terminadoEm) {
-    this.id = id;
-    this.usuarioId = usuarioId;
-    this.tipo = tipo;
-    this.status = status;
-    this.duracaoPlanejada = duracaoPlanejada;
-    this.tempoDeFoco = tempoDeFoco;
-    this.tempoDePausa = tempoDePausa;
-    this.diaLocal = diaLocal;
-    this.iniciadoEm = iniciadoEm;
-    this.terminadoEm = terminadoEm;
-  }
-
-  public UUID getId() {return id;}
-
-  public UUID getUsuarioId() {return usuarioId;}
-
-  public TipoSessao getTipo() {return tipo;}
-
-  public StatusSessao getStatus() {return status;}
-
-  public int getDuracaoPlanejada() {return duracaoPlanejada;}
-
-  public int getTempoDeFoco() {return tempoDeFoco;}
-
-  public int getTempoDePausa() {return tempoDePausa;}
-
-  public LocalDate getDiaLocal() {return diaLocal;}
-
-  public OffsetDateTime getIniciadoEm() {return iniciadoEm;}
-
-  public OffsetDateTime getTerminadoEm() {return terminadoEm;}
 }

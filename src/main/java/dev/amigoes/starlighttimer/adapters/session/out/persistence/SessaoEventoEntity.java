@@ -3,12 +3,19 @@ package dev.amigoes.starlighttimer.adapters.session.out.persistence;
 import dev.amigoes.starlighttimer.domain.session.enums.OrigemEvento;
 import dev.amigoes.starlighttimer.domain.session.enums.TipoEvento;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
 @Entity
 @Table(name = "sessao_evento")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class SessaoEventoEntity {
 
   @Id
@@ -33,32 +40,5 @@ public class SessaoEventoEntity {
   @Enumerated(EnumType.STRING)
   @Column(name = "origem", nullable = false, length = 25)
   private OrigemEvento origem;
-
-  protected  SessaoEventoEntity() {
-  }
-
-  public SessaoEventoEntity(UUID id, UUID sessaoId, String payload, TipoEvento tipoEvento,
-                                 OffsetDateTime ocorridoEm, OffsetDateTime reportadoEm, OrigemEvento origem) {
-    this.id = id;
-    this.sessaoId = sessaoId;
-    this.payload = payload;
-    this.tipoEvento = tipoEvento;
-    this.ocorridoEm = ocorridoEm;
-    this.reportadoEm = reportadoEm;
-    this.origem = origem;
-  }
-  public UUID getId() {return id;}
-
-  public UUID getSessaoId() {return sessaoId;}
-
-  public String getPayload() {return payload;}
-
-  public TipoEvento getTipoEvento() {return tipoEvento;}
-
-  public OffsetDateTime getOcorridoEm() {return ocorridoEm;}
-
-  public OffsetDateTime getReportadoEm() {return reportadoEm;}
-
-  public OrigemEvento getOrigem() {return origem;}
 
 }
