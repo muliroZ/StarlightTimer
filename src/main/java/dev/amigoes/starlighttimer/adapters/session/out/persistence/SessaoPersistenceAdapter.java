@@ -74,6 +74,21 @@ public class SessaoPersistenceAdapter implements SessaoRepositoryPort {
   }
 
   @Override
+  public List<Sessao> listarHistorico(UUID usuarioId, LocalDate dataInicio, LocalDate dataFim, int limit, int offset) {
+    if (limit < 1 || offset < 0) {
+      throw new IllegalArgumentException("limit deve ser positivo e offset nao pode ser negativo");
+    }
+    return sessaoRepository.findHistoricoFiltrado(usuarioId, dataInicio, dataFim, limit, offset)
+        .stream().map(this::reconstituirSessao).toList();
+  }
+
+  @Override
+  public List<Sessao> listarAtivas() {
+    return sessaoRepository.findByStatusIn(Set.of(StatusSessao.RUNNING, StatusSessao.PAUSED))
+        .stream().map(this::reconstituirSessao).toList();
+  }
+
+  @Override
   public List<LocalDate> listarDiasComFocoConcluido(UUID usuarioId, LocalDate dataInicio, LocalDate dataFim) {
     return sessaoRepository.findDiasComFocoConcluido(usuarioId, dataInicio, dataFim);
   }
