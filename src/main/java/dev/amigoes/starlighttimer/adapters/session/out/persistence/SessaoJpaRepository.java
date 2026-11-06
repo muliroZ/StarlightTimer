@@ -25,6 +25,18 @@ public interface SessaoJpaRepository extends JpaRepository<SessaoEntity, UUID> {
                                                @Param("limit") int limit,
                                                @Param("offset") int offset);
 
+  @Query(value = "SELECT * FROM sessao WHERE usuario_id = :usuarioId " +
+      "AND (CAST(:dataInicio AS date) IS NULL OR dia_local >= CAST(:dataInicio AS date)) " +
+      "AND (CAST(:dataFim AS date) IS NULL OR dia_local <= CAST(:dataFim AS date)) " +
+      "ORDER BY iniciado_em DESC, id DESC LIMIT :limit OFFSET :offset", nativeQuery = true)
+  List<SessaoEntity> findHistoricoFiltrado(@Param("usuarioId") UUID usuarioId,
+                                           @Param("dataInicio") LocalDate dataInicio,
+                                           @Param("dataFim") LocalDate dataFim,
+                                           @Param("limit") int limit,
+                                           @Param("offset") int offset);
+
+  List<SessaoEntity> findByStatusIn(Collection<StatusSessao> statuses);
+
   @Query("SELECT DISTINCT s.diaLocal FROM SessaoEntity s " +
       "WHERE s.usuarioId = :usuarioId " +
       "AND s.tipo = dev.amigoes.starlighttimer.domain.session.enums.TipoSessao.FOCUS " +

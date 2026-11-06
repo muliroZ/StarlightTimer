@@ -20,6 +20,10 @@ public interface SessaoRepositoryPort {
 
   List<Sessao> listarHistorico(UUID usuarioId, int limit, int offset);
 
+  List<Sessao> listarHistorico(UUID usuarioId, LocalDate dataInicio, LocalDate dataFim, int limit, int offset);
+
+  List<Sessao> listarAtivas();
+
   List<LocalDate> listarDiasComFocoConcluido(UUID usuarioId, LocalDate dataInicio, LocalDate dataFim);
 }
 

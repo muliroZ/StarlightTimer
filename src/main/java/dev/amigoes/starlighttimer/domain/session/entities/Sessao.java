@@ -94,6 +94,10 @@ public class Sessao {
     }
 
     public SessaoEvento concluir(OffsetDateTime ocorridoEm, OffsetDateTime reportadoEm) {
+        return concluir(ocorridoEm, reportadoEm, OrigemEvento.CLIENTE);
+    }
+
+    public SessaoEvento concluir(OffsetDateTime ocorridoEm, OffsetDateTime reportadoEm, OrigemEvento origem) {
         StatusSessao proximo = status.changeStatus(StatusSessao.COMPLETED);
         if (status != StatusSessao.RUNNING) {
             throw new TransicaoInvalidaException("A conclusao exige uma sessao em andamento");
@@ -109,7 +113,12 @@ public class Sessao {
         status = proximo;
         tempoDeFoco = focoFinal;
         terminadoEm = fim;
-        return criarEvento(TipoEvento.CONCLUIDA, "{\"tempoDeFocoSegundos\":%d}".formatted(tempoDeFoco), ocorridoEm, reportadoEm, OrigemEvento.CLIENTE);
+        return criarEvento(TipoEvento.CONCLUIDA, "{\"tempoDeFocoSegundos\":%d}".formatted(tempoDeFoco), ocorridoEm, reportadoEm, origem);
+    }
+
+    public SessaoEvento conclusaoRejeitada(int segundosRestantes, OffsetDateTime ocorridoEm, OffsetDateTime reportadoEm) {
+        return criarEvento(TipoEvento.CONCLUSAO_REJEITADA,
+                "{\"segundosRestantes\":%d}".formatted(segundosRestantes), ocorridoEm, reportadoEm, OrigemEvento.CLIENTE);
     }
 
     public SessaoEvento abandonar(String motivo, OffsetDateTime ocorridoEm, OffsetDateTime reportadoEm) {
@@ -121,6 +130,9 @@ public class Sessao {
         Objects.requireNonNull(motivo, "motivo e obrigatorio");
         Objects.requireNonNull(origem, "origem e obrigatoria");
         int pausaTotal = status == StatusSessao.PAUSED ? pausaTotalAte(ocorridoEm) : tempoDePausa;
+        if (status == StatusSessao.RUNNING) {
+            tempoDeFoco = focoAte(ocorridoEm, tempoDePausa);
+        }
         status = proximo;
         tempoDePausa = pausaTotal;
         pausaIniciadaEm = null;

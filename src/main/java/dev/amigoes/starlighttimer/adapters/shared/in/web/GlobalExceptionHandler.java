@@ -2,6 +2,7 @@ package dev.amigoes.starlighttimer.adapters.shared.in.web;
 
 import dev.amigoes.starlighttimer.domain.session.exceptions.ConclusaoAntecipadaException;
 import dev.amigoes.starlighttimer.domain.session.exceptions.TransicaoInvalidaException;
+import dev.amigoes.starlighttimer.domain.session.exceptions.SessaoAtivaExistenteException;
 import dev.amigoes.starlighttimer.domain.shared.exceptions.RegraDeNegocioException;
 import dev.amigoes.starlighttimer.domain.shared.exceptions.RecursoNaoEncontradoException;
 import dev.amigoes.starlighttimer.domain.identity.exceptions.UsuarioNaoAutenticadoException;
@@ -47,6 +48,21 @@ public class GlobalExceptionHandler {
         problem.setTitle("Conclusão antecipada");
         problem.setDetail(ex.getMessage());
         problem.setProperty("segundosRestantes", ex.getSegundosRestantes());
+        return problem;
+    }
+
+    @ExceptionHandler(SessaoAtivaExistenteException.class)
+    public ProblemDetail sessaoAtiva(SessaoAtivaExistenteException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setTitle("Sessao ativa existente");
+        problem.setProperty("sessaoId", ex.getSessaoId());
+        return problem;
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ProblemDetail argumentoInvalido(IllegalArgumentException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setTitle("Requisicao invalida");
         return problem;
     }
 }

@@ -43,6 +43,14 @@ public class TransicoesSessaoService {
         return sessao.concluir(agora(), reportadoEm);
     }
 
+    public SessaoEvento concluirPorAgendador(Sessao sessao) {
+        return sessao.concluir(agora(), null, OrigemEvento.AGENDADOR);
+    }
+
+    public OffsetDateTime horarioServidor() {
+        return agora();
+    }
+
     public SessaoEvento abandonar(Sessao sessao, String motivo, OffsetDateTime reportadoEm) {
         return sessao.abandonar(motivo, agora(), reportadoEm);
     }
