@@ -208,6 +208,14 @@ Verificação manual atual: envie GET e PATCH aos quatro endpoints, com e sem `X
 
 As ações usam `ConsultarIdentidadePort` para obter o usuário atual. O cabeçalho provisório `X-Usuario-Id` foi desativado em `dev` porque não comprova identidade. Até a integração de JWT (BL-05), os dois endpoints retornam `401`, mesmo que o cliente envie esse cabeçalho. Depois da integração, a identidade virá do token validado. Verifique manualmente o `401` com e sem `X-Usuario-Id`; então, com JWT disponível, confira envio, aceite, recusa, cancelamento e o efeito do trigger no PostgreSQL.
 
+### Círculo social (#34)
+
+`GET /api/v1/me/amigos` devolve uma lista com `id`, `nomeExibido` e `avatar` do perfil de cada amigo. `GET /api/v1/me/pedidos` devolve `recebidos` e `enviados`, contendo apenas pedidos `PENDENTE`. A consulta de perfil público passa pela porta de entrada de identidade; o módulo social não acessa as entidades JPA de identidade.
+
+`DELETE /api/v1/amizades/{id}` permite que qualquer participante remova a amizade e devolve `204`; para um ID inexistente ou de outra pessoa, devolve `404`. `POST /api/v1/me/bloqueios/{usuarioId}` grava o bloqueio, remove a amizade e marca os pedidos pendentes do par como `CANCELADO` com `respondido_em`, tudo na mesma transação. `DELETE` no mesmo caminho remove somente o bloqueio: não recria amizade nem pedido. Bloquear e desbloquear novamente devolvem `204`. Bloquear a si mesmo devolve `422`; bloquear um usuário inexistente ou inativo devolve `404`. As mutações usam o lock por par de usuários já adotado nos pedidos de amizade.
+
+Enquanto JWT não estiver integrado, os cinco endpoints devolvem `401`, inclusive com `X-Usuario-Id`. Após a integração, verifique com dois usuários: aceite um pedido, consulte as duas listas, desfaça a amizade de cada lado, crie novo pedido e bloqueie o par. Confira no PostgreSQL que a amizade sumiu, que o pedido passou a `CANCELADO` com `respondido_em` e que `lista_bloqueio` manteve a linha. Desbloqueie e confirme que a amizade continua ausente.
+
 ## 10. Anotações privadas
 
 `POST`, `GET`, `PATCH` e `DELETE /api/v1/anotacoes` usam `ConsultarIdentidadePort` para obter o usuário atual. Até a integração de JWT (BL-05), todos retornam `401`, inclusive com `X-Usuario-Id`; o cabeçalho enviado pelo cliente não comprova identidade. Após a integração, a leitura, edição e exclusão de uma anotação alheia retornam `404`. A criação e a listagem por sessão também retornam `404` quando a sessão não pertence ao usuário autenticado.
