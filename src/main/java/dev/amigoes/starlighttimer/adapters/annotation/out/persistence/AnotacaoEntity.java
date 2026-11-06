@@ -4,6 +4,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -11,6 +15,9 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "anotacao")
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
 public class AnotacaoEntity {
 
     @Id
@@ -34,44 +41,4 @@ public class AnotacaoEntity {
     @Column(name = "atualizado_em", nullable = false)
     private Instant atualizadoEm;
 
-    public AnotacaoEntity() {
-    }
-
-    public AnotacaoEntity(UUID id, UUID usuarioId, UUID sessaoId, String conteudo, LocalDate dataAnotacao, Instant criadoEm, Instant atualizadoEm) {
-        this.id = id;
-        this.usuarioId = usuarioId;
-        this.sessaoId = sessaoId;
-        this.conteudo = conteudo;
-        this.dataAnotacao = dataAnotacao;
-        this.criadoEm = criadoEm;
-        this.atualizadoEm = atualizadoEm;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public UUID getUsuarioId() {
-        return usuarioId;
-    }
-
-    public UUID getSessaoId() {
-        return sessaoId;
-    }
-
-    public String getConteudo() {
-        return conteudo;
-    }
-
-    public LocalDate getDataAnotacao() {
-        return dataAnotacao;
-    }
-
-    public Instant getCriadoEm() {
-        return criadoEm;
-    }
-
-    public Instant getAtualizadoEm() {
-        return atualizadoEm;
-    }
 }
