@@ -18,7 +18,6 @@ public class SessaoConcluidaListener {
 
     @EventListener
     public void aoConcluir(SessaoConcluida evento) {
-        // A leitura de métricas usa SQL; publica-se somente após gravar a transição.
         entidades.flush();
         evento.registrarRecompensa(progressao.conceder(evento));
     }

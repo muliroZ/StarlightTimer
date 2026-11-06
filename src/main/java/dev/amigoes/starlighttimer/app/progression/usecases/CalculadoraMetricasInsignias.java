@@ -15,7 +15,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-/** Métricas de D-9; os alvos e recompensas continuam pertencendo ao catálogo. */
 final class CalculadoraMetricasInsignias {
     Map<String, Integer> calcular(HistoricoProgressao historico) {
         var focos = historico.ciclos().stream().filter(Ciclo::foco).toList();

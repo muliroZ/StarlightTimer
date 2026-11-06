@@ -6,7 +6,6 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.UUID;
 
-/** Dados autoritativos usados para avaliar as regras de D-9 no instante do evento. */
 public record HistoricoProgressao(ZoneId fuso, List<Ciclo> ciclos, List<Nota> notas) {
     public HistoricoProgressao {
         ciclos = List.copyOf(ciclos);

@@ -51,7 +51,6 @@ public class ConcederProgressaoService {
         this.relogio = relogio;
     }
 
-    /** Executado na transação que concluiu e persistiu a sessão. */
     @Transactional(propagation = Propagation.MANDATORY)
     public SessaoConcluida.Recompensa conceder(SessaoConcluida evento) {
         int xpAnterior = perfil.bloquearEObterTotal(evento.usuarioId());

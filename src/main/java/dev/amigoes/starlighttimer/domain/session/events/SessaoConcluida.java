@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-/** Evento interno síncrono. O consumidor preenche a resposta antes de publishEvent retornar. */
 public final class SessaoConcluida {
     private final UUID sessaoId;
     private final UUID usuarioId;
