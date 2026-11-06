@@ -100,7 +100,7 @@ public class UsuarioPersistenceAdapter implements UsuarioRepositoryPort {
     }
 
     @Override
-    public boolean existePorId(UUID id) {
-        return usuarios.existsById(id);
+    public boolean existeAtivoPorId(UUID id) {
+        return usuarios.existsByIdAndStatusAndExcluidoEmIsNull(id, "ACTIVE");
     }
 }

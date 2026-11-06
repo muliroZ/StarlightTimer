@@ -5,4 +5,6 @@ import java.util.UUID;
 
 public interface UsuarioJpaRepository extends JpaRepository<UsuarioEntity, UUID> {
     boolean existsByEmail(String email);
+
+    boolean existsByIdAndStatusAndExcluidoEmIsNull(UUID id, String status);
 }

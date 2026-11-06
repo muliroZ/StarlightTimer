@@ -4,5 +4,5 @@ import java.util.UUID;
 
 public interface ConsultarIdentidadePort {
     UUID obterUsuarioAtual();
-    boolean existeUsuario(UUID id);
+    boolean existeUsuarioAtivo(UUID id);
 }

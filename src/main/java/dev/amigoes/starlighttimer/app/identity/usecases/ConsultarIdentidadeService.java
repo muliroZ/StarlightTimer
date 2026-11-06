@@ -23,7 +23,7 @@ public class ConsultarIdentidadeService implements ConsultarIdentidadePort {
     }
 
     @Override
-    public boolean existeUsuario(UUID id) {
-        return usuarios.existePorId(id);
+    public boolean existeUsuarioAtivo(UUID id) {
+        return usuarios.existeAtivoPorId(id);
     }
 }
