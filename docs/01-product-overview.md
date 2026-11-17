@@ -27,7 +27,7 @@ Estas são hipóteses de trabalho, não pesquisa validada. Veja o item **P-2** d
 
 ## Catálogo de features
 
-Agrupadas por área de domínio, e não por tela. "Tier" é uma recomendação, não uma decisão — veja o item **P-1** do checklist.
+Agrupadas por área de domínio, e não por tela. O escopo do MVP está decidido em **P-1** e **D-11**; veja [10-domain-rules-decisions](10-domain-rules-decisions.md).
 
 ### Timer principal
 | Feature | Descrição | Tier |
@@ -44,7 +44,7 @@ Agrupadas por área de domínio, e não por tela. "Tier" é uma recomendação, 
 | Badges | Conquistas discretas, algumas cumulativas ("Supernova ×50"), algumas condicionais ("Night Watch") | MVP |
 | Ranks | Tiers nomeados acima do nível ("Stellar Cartographer" → "Quasar") | MVP |
 | Trilhas de progressão | Barras de progresso de múltiplas metas (ciclos semanais, horas, disciplina de pausa) | Pós-MVP |
-| Constelações | Metas agrupadas que se completam em uma constelação nomeada | Pós-MVP |
+| Constelações | Conjunto de insígnias com mínimo de estrelas; seis constelações no catálogo inicial | MVP |
 | Customização de tela | Temas e fundos cosméticos desbloqueados por progressão | Pós-MVP |
 
 ### Social
@@ -63,21 +63,21 @@ Agrupadas por área de domínio, e não por tela. "Tier" é uma recomendação, 
 | Lembretes customizáveis | Cutucadas para começar, para pausar, para voltar depois de se dispersar | Pós-MVP |
 | Integração com música | Loops de ambiência embutidos e/ou provedor externo de streaming | Pós-MVP (risco de licenciamento — veja **L-1** no checklist) |
 
-## Limite de MVP recomendado
+## Limite do MVP aprovado
 
 Entregue a menor coisa que ainda pareça StarlightTimer, e não um timer genérico:
 
-> **Autenticação + timer solo de foco/pausa com o ciclo de vida completo da estrela + persistência da sessão + histórico de sessões + anotações privadas + XP, níveis e badges + amizades.**
+> **Autenticação + timer solo de foco/pausa com ciclo de vida completo da estrela + persistência e histórico de sessões + anotações privadas + XP, níveis, 12 patentes, 22 insígnias e seis constelações + amizades.**
 
 Deliberadamente fora do MVP: salas co-op, música, lembretes, cosméticos, leaderboards.
+
+No MVP, o cadastro e o login usam e-mail e senha. O acesso é liberado após o cadastro, sem confirmação de e-mail (A-2).
 
 O raciocínio é que o ciclo de vida da estrela e o loop de progressão são a identidade do produto, e ambos são alcançáveis com um backend simples de request/response. Salas co-op introduzem infraestrutura de tempo real, um segundo modelo de consistência e uma classe grande de casos extremos; adicioná-las antes de validar o loop principal arrisca gastar a maior parte do orçamento do time na feature com o retorno menos garantido.
 
 ## Glossário de domínio
 
-O tema não é decoração — é a linguagem ubíqua. Use estes termos em código, colunas de banco, tickets e textos de UI para que conversa, schema e interface permaneçam alinhados.
-
-Os termos são mantidos em inglês porque é assim que eles vão aparecer no código.
+O tema orienta a linguagem de interface e a conversa de produto. No código Java e no schema, valem os nomes em português definidos em [Contexo](Contexo.md) §6 e §7; constantes de enum copiam literalmente as migrations. Em tickets, indique o termo técnico junto ao temático quando houver ambiguidade.
 
 | Termo | Significado | Equivalente neutro |
 |---|---|---|
@@ -88,7 +88,7 @@ Os termos são mantidos em inglês porque é assim que eles vão aparecer no có
 | **Stage** | Uma das seis fases visuais de um ciclo | Fase de progresso |
 | **Orbit** | Uma sequência contínua de dias ativos | Streak |
 | **In orbit** | Tempo de foco acumulado | Total de horas de foco |
-| **Constellation** | Um grupo nomeado de metas relacionadas | Conjunto de conquistas |
+| **Constellation** | Conjunto de insígnias com mínimo de estrelas; exige ambos os critérios | Constelação |
 | **Rank** | Tier nomeado derivado do nível | Tier / liga |
 | **Star Log** | A tela de histórico de sessões | Histórico |
 | **Ambience** | Configurações de música e som | Configurações de áudio |
@@ -107,4 +107,4 @@ Retirados diretamente da lógica do protótipo. O estágio é uma função pura 
 | Supernova | 88–100% | `#ff7ad9` | Termine o raciocínio |
 | Cooling Nebula | ciclos de pausa | `#7fd8ff` | Descanso |
 
-Uma consequência que vale notar desde já: como o estágio deriva do percentual e não de minutos absolutos, um usuário que configura um ciclo de 50 minutos recebe o mesmo arco narrativo esticado pelo dobro do tempo. Esse é provavelmente o comportamento desejado, mas deve ser uma decisão explícita — veja **D-4** no checklist.
+Uma consequência que vale notar desde já: como o estágio deriva do percentual e não de minutos absolutos, um usuário que configura um ciclo de 50 minutos recebe o mesmo arco narrativo esticado pelo dobro do tempo. Esse comportamento foi confirmado em **D-4** ([10-domain-rules-decisions](10-domain-rules-decisions.md)).

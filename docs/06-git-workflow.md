@@ -2,19 +2,19 @@
 
 Este documento explica como o time leva código de uma ideia até a `main`. Foi escrito para todo colaborador — leia antes da sua primeira branch, e releia se o fluxo parecer ambíguo no meio de um PR.
 
-Ele complementa, em vez de substituir, os itens de processo já em aberto no [05 — Checklist de Planejamento](05-planning-checklist.md) (veja de **T-1** a **Q-3**). Assim que o time definir de fato a estratégia de repositório, o provedor de CI e as regras de review, atualize *este* documento no mesmo PR — conforme a própria convenção do README.
+O fluxo de branches e review já foi decidido (Q-2) e há templates e triagem de issues (Q-3). Consulte [Contexo](Contexo.md) §9–10 para as regras vigentes; T-1 e T-7 ainda estão em aberto.
 
 ---
 
 ## 1. Modelo de branches
 
-Três níveis, cada um com um propósito diferente e uma quantidade diferente de cerimônia:
+O fluxo de código tem três níveis. A branch `dev-docs` é uma referência de leitura com cópias das notas do Obsidian. Atualize apenas a documentação a partir da própria `dev-docs`, mantendo seu histórico independente.
 
-| Branch | Papel | Protegida? | Quem faz merge nela |
-|---|---|---|---|
-| `main` | Sempre implantável. Reflete um módulo de desenvolvimento finalizado e revisado. | Sim — ruleset rígido | Apenas via PR revisado a partir de `dev` |
-| `dev` | Branch de integração do módulo atualmente em andamento. | Sim — ruleset mais leve | Apenas via PR revisado a partir de branches `<tipo>/*` |
-| `<tipo>/*` | Onde o trabalho de fato acontece. Curta duração, um tópico cada. | Não | N/A — esta *é* a branch de trabalho |
+| Branch     | Papel                                                                           | Protegida?              | Quem faz merge nela                                    |
+| ---------- | ------------------------------------------------------------------------------- | ----------------------- | ------------------------------------------------------ |
+| `main`     | Sempre implantável. Reflete um módulo de desenvolvimento finalizado e revisado. | Sim — ruleset rígido    | Apenas via PR revisado a partir de `dev`               |
+| `dev`      | Branch de integração do módulo atualmente em andamento.                         | Sim — ruleset mais leve | Apenas via PR revisado a partir de branches `<tipo>/*` |
+| `<tipo>/*` | Onde o trabalho de fato acontece. Curta duração, um tópico cada.                | Não                     | N/A — esta *é* a branch de trabalho                    |
 
 ```mermaid
 gitGraph
@@ -22,39 +22,39 @@ gitGraph
     branch dev
     checkout dev
     commit id: "baseline dev"
-    branch feat/session-timer
-    checkout feat/session-timer
+    branch feat/20-dominio-sessao
+    checkout feat/20-dominio-sessao
     commit id: "esqueleto do timer"
     commit id: "verificacao no servidor"
     checkout dev
-    merge feat/session-timer
-    branch fix/timer-drift
-    checkout fix/timer-drift
+    merge feat/20-dominio-sessao
+    branch fix/21-desvio-timer
+    checkout fix/21-desvio-timer
     commit id: "limita desvio de relogio"
     checkout dev
-    merge fix/timer-drift
-    branch docs/api-conventions
-    checkout docs/api-conventions
+    merge fix/21-desvio-timer
+    branch docs/22-convencoes-api
+    checkout docs/22-convencoes-api
     commit id: "documenta convencoes T-9"
     checkout dev
-    merge docs/api-conventions
+    merge docs/22-convencoes-api
     checkout main
     merge dev tag: "modulo 1 concluido"
 ```
 
-### Nomenclatura de branch: `<tipo>/<descricao-curta>`
+### Nomenclatura de branch: `<tipo>/<número-da-issue>-<descricao-curta>`
 
 | Tipo | Usar para | Exemplo |
 |---|---|---|
-| `feat` | Uma nova feature ou capacidade | `feat/coop-room-lobby` |
-| `fix` | Correção de bug | `fix/streak-timezone-bug` |
-| `docs` | Mudanças apenas de documentação | `docs/update-domain-model` |
-| `refactor` | Reestruturação de código sem mudança de comportamento | `refactor/extract-derive-stage` |
-| `test` | Adicionar ou corrigir apenas testes | `test/xp-ledger-integration` |
-| `chore` | Ferramental, dependências, config, CI | `chore/setup-flyway` |
-| `style` | Apenas formatação, sem mudança de lógica | `style/lint-frontend` |
+| `feat` | Uma nova feature ou capacidade | `feat/42-iniciar-sessao` |
+| `fix` | Correção de bug | `fix/43-corrigir-dia-logico` |
+| `docs` | Mudanças apenas de documentação | `docs/44-atualizar-modelo` |
+| `refactor` | Reestruturação de código sem mudança de comportamento | `refactor/45-extrair-estagio` |
+| `test` | Adicionar ou corrigir apenas testes | `test/46-ledger-xp` (somente após revisão de §10.1) |
+| `chore` | Ferramental, dependências, config, CI | `chore/47-configurar-flyway` |
+| `style` | Apenas formatação, sem mudança de lógica | `style/48-formatar-frontend` |
 
-Mantenha a descrição curta, em kebab-case, e específica o bastante para que um colega consiga adivinhar o conteúdo só pelo nome. Se o time começar a usar um rastreador de issues (**Q-3**), prefixe com o número do ticket: `feat/42-coop-room-lobby`.
+Mantenha a descrição curta, em kebab-case, e específica o bastante para que um colega consiga adivinhar o conteúdo só pelo nome. O repositório já usa GitHub Issues (Q-3). Inclua sempre o número da issue: `feat/42-iniciar-sessao`.
 
 ---
 
@@ -87,7 +87,7 @@ O objetivo de proteger a `dev` além da `main` é que um merge ruim na `dev` ain
    ```bash
    git checkout dev
    git pull origin dev
-   git checkout -b feat/descricao-curta
+   git checkout -b feat/42-iniciar-sessao
    ```
 3. **Trabalhe na branch.** Faça commits cedo e com frequência, usando Conventional Commits (§4). Dê push regularmente para que os colegas vejam o progresso e para que você não perca trabalho.
 4. **Mantenha a branch atualizada.** Se a `dev` andar enquanto você trabalha, faça rebase (ou merge) dela antes de abrir o PR, para que o review aconteça sobre um diff limpo:
@@ -114,12 +114,12 @@ Formato:
 <corpo opcional mais longo — o "porquê", não só o "o quê">
 ```
 
-Use o mesmo vocabulário de `<tipo>` dos prefixos de branch acima (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `style`). O escopo geralmente deve corresponder a um módulo de backend do doc 02 (`identity`, `timer`, `progression`, `rooms`, `social`, `annotations`, `notifications`, `media`, `cosmetics`) ou a uma área de feature do frontend.
+Use o mesmo vocabulário de `<tipo>` dos prefixos de branch acima (`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `style`). O escopo geralmente corresponde aos módulos em português de [Contexo](Contexo.md) §6 (`identidade`, `sessao`, `progressao`, `social`, `anotacao` etc.) ou a uma área transversal. ABERTO-11 registra a preferência final do time.
 
 Exemplos, ancorados no domínio deste próprio projeto:
 
 ```
-feat(timer): add server-authoritative completion check (AD-2)
+feat(sessao): valida conclusao pelo servidor (AD-2)
 
 fix(progression): correct XP formula rounding for co-op bonus
 
@@ -129,7 +129,7 @@ refactor(frontend): extract deriveStage into its own pure module
 
 test(progression): add boundary tests for stage thresholds (0.199 vs 0.200)
 
-chore(ci): add Testcontainers step to backend pipeline
+ci(ci): compila backend sem executar testes (T-7)
 ```
 
 Uma boa descrição explica *por que* uma mudança foi feita, quando isso não é óbvio pelo diff — "corrige off-by-one" está ótimo para um erro de digitação; "corrige o reset de streak à meia-noite porque D-7 exige avaliação no dia local" é muito mais útil daqui a seis meses.
@@ -153,22 +153,13 @@ Um template mínimo de PR (`.github/PULL_REQUEST_TEMPLATE.md`) ajuda isso a acon
 
 ## 6. Expectativas do pipeline de CI
 
-As especificidades são de vocês, mas, no mínimo, a CI rodando em todo PR para `dev` e `main` deve:
-
-- Compilar backend e frontend (um build quebrado nunca deveria ser mergeável).
-- Rodar os testes unitários do backend e — assim que **T-4**/**Q-4** estiverem definidos — testes de integração contra um Postgres real via Testcontainers.
-- Rodar os testes unitários do frontend para qualquer coisa com lógica real (`deriveStage` é o candidato óbvio).
-- Rodar lint nas duas bases de código.
-
-Passar na CI é um **status check obrigatório** nas duas branches protegidas (§2) — o sinal verde é um portão, não uma sugestão.
-
----
+O workflow `ci.yml` verifica o build em PRs para `dev` e `main` com `./mvnw -DskipTests verify`. O workflow `pr-check.yml` valida o fluxo das branches, o título e a seção “Como foi testado”. Registre no PR os comandos ou passos de verificação executados e os resultados. Conforme Q-4, a suíte passa a ser obrigatória quando sua execução na CI for reproduzível (#76).
 
 ## 7. Boas práticas
 
 - **Escreva Conventional Commits com uma descrição de verdade.** O público é o seu eu futuro e seus colegas, não o compilador.
 - **Atualize a documentação no mesmo PR da mudança**, sempre que a mudança for uma decisão, e não apenas um detalhe de implementação. Se você resolver um item do checklist (05), mexer em um fluxo de dados (02) ou mudar uma regra de domínio (03), o documento deve dizer isso até o PR ser mergeado — não "depois".
-- **Use IA para ajudar a escrever testes.** Pedir a um assistente que rascunhe testes unitários para as fronteiras do `deriveStage`, ou para os casos extremos do ledger de XP, é um bom uso da ferramenta e um bom hábito para cobertura que de outra forma seria pulada.
+- **Aplique Q-4 ao trabalhar com IA.** A execução de testes relevantes é permitida. Para escrever ou alterar testes, siga [Contexo](Contexo.md) §10.1.
 - **Seja deliberado sobre o quanto a IA escreve por você.** Este projeto existe para que o time aprenda a construir e raciocinar sobre uma aplicação full-stack — as decisões de arquitetura, os trade-offs de schema, os momentos de "por que esse bug acontece". Apoiar-se em IA para gerar grandes blocos de código não revisado troca esse aprendizado por velocidade de curto prazo. Use para explicar, para revisar, para testar, para destravar — e garanta que você consegue explicar, sem ser perguntado, o que o seu próprio código faz e por que ele tem a forma que tem.
 
 ---
@@ -184,11 +175,11 @@ git checkout -b feat/minha-feature
 git fetch origin && git rebase origin/dev
 
 # Commit
-git commit -m "feat(timer): add pause tolerance window (D-2)"
+git commit -m "feat(sessao): aplica limite de pausa (D-2)"
 
 # Push e abrir um PR para dev via GitHub
 
 # Depois do merge, limpar localmente
 git checkout dev && git pull origin dev
-git branch -d feat/minha-feature
+git branch -d feat/20-dominio-sessao
 ```

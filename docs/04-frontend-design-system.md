@@ -117,13 +117,13 @@ O protótipo usa opacidade como principal recurso de hierarquia: ações primár
 |---|---|---|
 | Homepage / Timer | ✅ Construída | Três colunas: sidebar de navegação, timer, sidebar de estatísticas |
 | Perfil | ✅ Construída | Hero + grade de badges + progressão + configurações |
-| Login / Cadastro | ❌ Faltando | Necessária para o MVP |
+| Login / Cadastro | ❌ Faltando | E-mail e senha, com acesso liberado após o cadastro (A-2) |
 | Star Log (histórico de sessões) | ❌ Faltando | A sidebar linka para ela; necessária para o MVP |
 | Configurações (página completa) | ❌ Faltando | O perfil tem apenas um painel parcial |
 | Sala co-op | ❌ Faltando | Pós-MVP |
 | Users Network Hub | ❌ Faltando | Pós-MVP |
 | Ranking de amigos | ❌ Faltando | Pós-MVP |
-| Constelações | ❌ Faltando | A sidebar linka para ela |
+| Constelações | ❌ Faltando | Necessária para o MVP: seis constelações (**D-11**) |
 | Ambiência / música | ❌ Faltando | A sidebar linka para ela |
 | Orbit Goals | ❌ Faltando | A sidebar linka para ela |
 | Estados vazios | ❌ Faltando | No primeiro dia não há estrelas, badges nem amigos |
@@ -168,7 +168,7 @@ Todo o resto é convencional. Este carrega a identidade do produto e merece cuid
 
 **Deriva:** fração de progresso → estágio → cor do anel, gradiente do núcleo, cor do halo, diâmetro do núcleo, raio do brilho, `stroke-dashoffset` (circunferência 578 para r=92), e o rótulo `MM:SS`.
 
-**Contrato:** a função de estágio é pura e sem estado. Extraiam para `deriveStage(progress, mode)` em um módulo próprio e testem unitariamente nas fronteiras (0.199 vs 0.200, 0.679 vs 0.680, etc.). É uma tabela de lookup, mas é a tabela de lookup que define o produto, e bugs de fronteira ali são do tipo que chega em produção.
+**Contrato:** a função de estágio é pura e sem estado. Extraiam para `deriveStage(progress, mode)` em um módulo próprio e verifiquem as fronteiras (0.199/0.200, 0.679/0.680, etc.) conforme Q-4 em [Contexo](Contexo.md) §10.1. É uma tabela de lookup, mas é a tabela de lookup que define o produto, e bugs de fronteira ali são do tipo que chega em produção.
 
 **Fonte da contagem:** conforme **AD-2**, não façam contagem regressiva a partir de um número armazenado localmente. Calculem `elapsedSeconds` a partir do `startedAt` fornecido pelo servidor e do horário atual, a cada tick. Navegadores limitam `setInterval` em abas em segundo plano; um contador decrementado localmente vai divergir, e um usuário que troca de aba por dez minutos volta para um timer errado. Derivar de timestamps torna o throttling inofensivo — o próximo tick simplesmente calcula o valor correto.
 
