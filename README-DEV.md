@@ -84,7 +84,7 @@ A árvore mostra a convenção para os módulos do MVP; diretórios sem implemen
 4. Implemente as portas de saída em `adapters/<module>/out`. Entidades JPA são separadas dos modelos de domínio, convertidas por mapeadores e declaram `@Table(name = ...)` explicitamente.
 5. Implemente o controlador em `adapters/<module>/in/web`, dependendo da porta de entrada. Receba e devolva DTOs próprios (`record`), com Bean Validation para formato e obrigatoriedade.
 6. Traduza exceções de domínio para `ProblemDetail` (RFC 9457) em `adapters/shared/in/web`. Invariantes de negócio permanecem no domínio.
-7. Registre os passos de verificação manual e os resultados no PR.
+7. Registre a verificação realizada e os resultados no PR.
 
 Evite interfaces especulativas, mediadores genéricos, CQRS e event sourcing completo. Um catálogo somente leitura pode ter uma única porta de leitura.
 
@@ -123,9 +123,15 @@ Para empacotar ou executar a verificação de build:
 ./mvnw -DskipTests verify
 ```
 
-**Política vigente (§10.1 do contexto):** até a entrega de 06/11/2026, assistentes de IA não escrevem, alteram nem executam testes automatizados. A restrição permanece até a seção ser explicitamente atualizada; a passagem da data não libera testes por si só.
+**Política de testes (Q-4).** Assistentes de IA podem executar os testes relevantes. Podem escrever ou alterar testes quando a tarefa pedir, quando a política do projeto exigir ou para cobrir uma regressão concreta que a suíte existente não detecta.
 
-Use verificação manual: requisições HTTP, consultas SQL e inspeção de logs, com resultado esperado e observado no PR. Não altere arquivos de teste, dependências ou plugins de teste durante essa restrição.
+Priorize testes unitários para invariantes de domínio e testes de integração para persistência e transações. A primeira cobertura inclui conclusão e abandono de sessão, concessão única de XP, autorização de anotações e aceite de amizade via trigger. Use PostgreSQL via Testcontainers e inclua Redis nos cenários de cache. Mantenha o Docker disponível para os testes com containers.
+
+```bash
+./mvnw test
+```
+
+A CI verifica o build com `-DskipTests verify` durante a adoção inicial. A suíte passa a ser obrigatória quando sua execução na CI for reproduzível. Registre os testes executados e os passos manuais relevantes no PR.
 
 ### Acesso local sem JWT
 
@@ -149,7 +155,7 @@ Para verificar um CRUD, crie uma anotação com `POST /api/v1/anotacoes` (`conte
 - Crie a branch a partir de `dev`, no padrão `<tipo>/<numero-da-issue>-<descricao>`, como `fix/21-alinha-guia-contexto`.
 - Use Conventional Commits: `<tipo>(<escopo>): <resumo>`. Os escopos de commit continuam em português conforme o contexto; são independentes dos nomes dos pacotes e incluem áreas como `docs`, `infra` e `ci`.
 - Abra PR para `dev` e preencha o template. Use `Closes #N` quando o PR resolver a issue e cite IDs de decisões sem renomeá-los.
-- Na seção de validação, marque os passos manuais realizados ou a revisão documental e descreva o resultado. Compilações usam `-DskipTests`.
+- Na seção de validação, registre os testes executados, passos manuais ou revisão documental e descreva o resultado.
 - Atualize a documentação no mesmo PR quando mudar uma decisão ou fluxo e marque a opção correspondente no template.
 - Não faça commit, push ou merge direto em `dev` ou `main`.
 
