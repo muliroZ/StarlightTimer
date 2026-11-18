@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build do backend
+  backend:
+    name: CI backend
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -32,3 +32,36 @@ jobs:
 
       - name: Compilar e verificar o projeto
         run: ./mvnw --batch-mode --no-transfer-progress -DskipTests verify
+
+  frontend:
+    name: CI frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Baixar codigo do repositorio
+        uses: actions/checkout@v7
+
+      - name: Configurar Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Instalar dependencias
+        run: bun install --frozen-lockfile
+
+      - name: Linter
+        run: bun run lint
+
+      - name: Build
+        run: bun run build
+
+      - name: Salvar build
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist-build
+          path: frontend/dist/
+          retention-days: 7
