@@ -712,7 +712,7 @@ Registradas para que ninguém (pessoa ou IA) siga a fonte desatualizada por enga
 |13|Âncoras de schema|Doc 08: `room_id`, `visibility`, `theme_id`|**Descartadas** — o ER cobre só o MVP|
 |14|Log de sessão|Docs 03/08: só pausa acumulada|ER: `sessao_evento` (servidor em `ocorrido_em`, cliente em `reportado_em`)|
 |15|Testes|A política anterior suspendia testes automatizados por IA durante M0|**Q-4** define autonomia, cobertura inicial e transição da CI (§10.1)|
-|17|Regras D-1 a D-11|Este contexto e doc 05 ainda as chamavam de abertas|Decididas em [[10-domain-rules-decisions]] (05/11/2026)|
+|17|Regras D-1 a D-11|Este contexto e doc 05 ainda as chamavam de abertas|Decididas em [10-domain-rules-decisions](10-domain-rules-decisions) (05/11/2026)|
 |16|Índice da documentação do repositório|`README-INTERNAL.md` lista o doc 07 e usa links `docs/...`|O índice pertence à documentação anterior. A `dev` usa `README-DEV.md` (§3)|
 
 ---
@@ -770,7 +770,7 @@ Consulte [[Backlog]] para andamento, issues e marcos. Esta seção mantém a ref
 | **T-3** Migrations            | Flyway                                                                         | `pom.xml`                     |
 | **Q-2** Branches e review     | `main`/`dev`/`<tipo>/*`                                                        | Doc 06                        |
 | **Q-3** Rastreador de issues  | GitHub Issues com templates e triagem automática                               | `.github/`                    |
-| **D-1 a D-11**                | Regras fechadas; curva até nível 60, 12 patentes, 22 insígnias, 6 constelações | [[10-domain-rules-decisions]] |
+| **D-1 a D-11**                | Regras fechadas; curva até nível 60, 12 patentes, 22 insígnias, 6 constelações | [10-domain-rules-decisions](10-domain-rules-decisions) |
 | Fontes da verdade             | Diagrama ER e diagrama macro são fontes máximas                                | Time, 04/11                   |
 | **Q-4** Estratégia de testes | Testes por IA autorizados conforme §10.1. Suíte obrigatória na CI após execução reproduzível | Revisão de 17/11/2026 |
 | ABERTO-01 Idioma do código    | Nomes de domínio, métodos e campos em português; sufixos de papel das classes e pacotes em inglês; constantes de enum seguem as migrations                             | Time, 04/11                   |
@@ -787,7 +787,7 @@ Consulte [[Backlog]] para andamento, issues e marcos. Esta seção mantém a ref
 
 Nenhuma pendência do doc 05 trava o MVP no momento; **L-5** foi resolvido em [05-planning-checklist](05-planning-checklist.md) (#67).
 
-D-1 a D-11 estão resolvidos em [[10-domain-rules-decisions]]. D-12 permanece pós-MVP.
+D-1 a D-11 estão resolvidos em [10-domain-rules-decisions](10-domain-rules-decisions). D-12 permanece pós-MVP.
 
 ### Em aberto — levantadas neste documento
 
