@@ -740,7 +740,7 @@ Consulte [Backlog](Backlog.md) para andamento, issues e marcos. Esta seção man
 |**BL-08**|`sessao`: iniciar, pausar, retomar, concluir, abandonar; `sessao_evento` em cada transição; job conclui sessões vencidas e abandona pausas acima de 10 min; histórico|`sessao`, `sessao_evento`|D-1 a D-4 resolvidos em [10-domain-rules-decisions](10-domain-rules-decisions.md)|
 |**BL-09**|`anotacao`: CRUD de notas de sessão e de dia|`anotacao`|D-8 resolvido em [10-domain-rules-decisions](10-domain-rules-decisions.md)|
 |**BL-10**|`progressao`: catálogos, ledger de XP, nível/patente derivados, 22 insígnias, 6 constelações e _orbit_ na leitura|`ganho_xp`, `limite_nivel`, `patente`, `insignia*`, `constelacao*`|D-5 a D-7, D-9 e D-11 resolvidos em [10-domain-rules-decisions](10-domain-rules-decisions.md)|
-|**BL-11**|`social`: enviar, aceitar (via trigger), recusar e cancelar pedido; desfazer amizade; bloqueio; matriz de visibilidade|`pedido_amizade`, `amizade`, `lista_bloqueio`|**L-5**|
+|**BL-11**|`social`: enviar, aceitar (via trigger), recusar e cancelar pedido; desfazer amizade; bloqueio; matriz de visibilidade|`pedido_amizade`, `amizade`, `lista_bloqueio`|L-5 resolvido em [05-planning-checklist](05-planning-checklist.md)|
 
 ### Infra, assíncrono e documentação
 
@@ -781,12 +781,11 @@ Consulte [Backlog](Backlog.md) para andamento, issues e marcos. Esta seção man
 | ABERTO-07 Constelações        | Entram no MVP                                                                  | Time, 04/11                   |
 | **ABERTO-08** Provedor de identidade | `provedor` obrigatório com `CHECK (provedor IN ('PASSWORD'))`. Identidades `PASSWORD` exigem `senha_hash` e têm `id_externo` nulo. Adotar `UNIQUE (usuario_id, provedor)` e manter `UNIQUE (provedor, id_externo)` para futuros logins sociais. Registro no ER pendente na #66. A migration fica para a #74. | [#66](https://github.com/muliroZ/StarlightTimer/issues/66) |
 | ABERTO-09 `sessao_evento`     | `ocorrido_em` = servidor; `reportado_em` = cliente                             | Time, 04/11                   |
+| **L-5** Visibilidade entre amigos | Matriz campo a campo fechada (identidade pública + progressão agregada/conquistas visíveis; histórico, atividade atual e anotações **D-8** na coluna "nunca"; 404 para amizade desfeita e bloqueio) | [05-planning-checklist](05-planning-checklist.md) (#67) |
 
 ### Em aberto — travam o MVP (doc 05)
 
-| ID      | Pergunta                                            | Onde trava                          |
-| ------- | --------------------------------------------------- | ----------------------------------- |
-| **L-5** | Matriz campo a campo do que um amigo vê             | Serviços de `social` e `progressao` |
+Nenhuma pendência do doc 05 trava o MVP no momento; **L-5** foi resolvido em [05-planning-checklist](05-planning-checklist.md) (#67).
 
 D-1 a D-11 estão resolvidos em [10-domain-rules-decisions](10-domain-rules-decisions.md). D-12 permanece pós-MVP.
 

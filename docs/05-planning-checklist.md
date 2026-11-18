@@ -65,7 +65,26 @@ A feature mais mal especificada e a mais cara. Não comecem até que todas estas
 - [x] **L-2** — *Bloqueante.* Qual regime de privacidade se aplica (LGPD, GDPR, ambos)? Determina obrigações de consentimento, exportação e exclusão.
 - [ ] **L-3** — *Bloqueante.* Semântica da exclusão de conta. Hard delete ou anonimização? O que acontece com as linhas de um usuário excluído no histórico de ranking de um amigo, ou com sua participação em uma sala compartilhada?
 - [ ] **L-4** — *Em breve.* Retenção de dados. As sessões persistem para sempre? E as anotações?
-- [ ] **L-5** — *Em breve.* Matriz exata de visibilidade entre amigos. Escrevam, campo a campo, o que um amigo pode ver: stars forged, streak, atividade atual, badges, títulos de sessão? Anotações precisam aparecer na coluna "nunca".
+- [x] **L-5** — *Resolvido.* Matriz exata de visibilidade entre amigos. A regra é aplicada obrigatoriamente na camada de serviço (`social` e `progressao`), nunca apenas na interface.
+
+  | Categoria | Campo / Dado | Termo (UI / Schema) | Visível para Amigo | Nunca Visível (Privado) | Observação |
+    | :--- | :--- | :--- | :---: | :---: | :--- |
+  | **Identidade** | ID, nome exibido, avatar e bio | `usuario_id`, `nome_exibido`, `avatar`, `bio` | Sim | — | Também visíveis na busca pública de usuários (exceto quando há bloqueio) |
+  | **Identidade** | E-mail e credenciais | `email`, `senha_hash`, `refresh_token` | — | **Nunca** | Dados estritamente privados da conta |
+  | **Identidade** | Fuso horário e configurações | `fuso_horario`, `configuracoes_usuario` | — | **Nunca** | Preferências individuais de timer e som |
+  | **Progressão** | Estrelas forjadas | *Stars forged* (`sessao` `COMPLETED`) | Sim | — | Total vitalício agregado de ciclos de foco concluídos |
+  | **Progressão** | Órbita (sequência) | *Orbit* (streak sobre `dia_local`) | Sim | — | Contagem atual de dias lógicos consecutivos ativos |
+  | **Progressão** | Tempo em órbita | *In orbit* (soma de `tempo_de_foco`) | Sim | — | Total vitalício acumulado de foco em minutos/segundos |
+  | **Progressão** | XP total, nível e patente | `xp_total`, `limite_nivel`, `patente` | Sim | — | Nível e patente atuais derivados do ledger `ganho_xp` |
+  | **Progressão** | Insígnias desbloqueadas | `insignia_usuario` (`desbloqueado_em IS NOT NULL`) | Sim | — | Progresso parcial de insígnias ainda bloqueadas (`contagem_progresso`) fica privado ao próprio usuário |
+  | **Progressão** | Constelações desbloqueadas | `constelacao_usuario` | Sim | — | Inclui estado visual de constelação perfeita derivado das 3 insígnias |
+  | **Sessão** | Histórico individual e ciclos | *Star Log* (`sessao`, `sessao_evento`) | — | **Nunca** | Apenas os totais agregados acima são expostos |
+  | **Sessão** | Atividade atual em tempo real | Presença / ciclo em execução | — | **Nunca (no MVP)** | Depende de presença e salas co-op (**R-8**), fora do escopo do MVP |
+  | **Anotações** | Anotações de sessão ou de dia | `anotacao` (**D-8**) | — | **Nunca** | Privadas por autorização por linha; jamais compartilhadas com amigos ou terceiros |
+
+  **Comportamento para amizade desfeita e bloqueio:**
+  - **Amizade desfeita:** A linha em `amizade` é removida. O antigo amigo perde imediatamente o acesso aos dados de progressão e gamificação; qualquer consulta ao endpoint de perfil de amigo passa a retornar **404 Not Found** (`RecursoNaoEncontradoException`, mesmo padrão de ocultação de **D-8**). O usuário volta a aparecer apenas com os dados básicos na busca e pode receber um novo pedido.
+  - **Bloqueio (`lista_bloqueio`):** Ao bloquear um usuário, qualquer amizade ativa ou pedido pendente entre ambos é removido, mantendo-se o registro unidirecional em `lista_bloqueio`. Enquanto existir bloqueio em qualquer direção (A bloqueou B ou B bloqueou A), ambos ficam invisíveis entre si nas buscas, e tentativas de acessar perfil, enviar pedido de amizade ou interagir retornam **404 Not Found** (nunca 403, para não confirmar o bloqueio).
 - [x] **L-6** — *Em breve.* Termos de uso e política de privacidade. Necessários antes de qualquer lançamento público.
 - [x] **L-7** — *Depois.* Banner de cookies/consentimento, se houver analytics.
 
