@@ -1,0 +1,49 @@
+:root {
+  /* SUPERFÍCIES */
+  --slt-void: #04060f; /* base da página */
+  --slt-deep-1: #050a1c; /* parada do gradiente, topo */
+  --slt-deep-2: #050817; /* parada do gradiente, meio */
+  --slt-deep-3: #03050e; /* parada do gradiente, base */
+
+  --slt-panel: rgba(9, 16, 40, 0.55); /* cards, seções do perfil */
+  --slt-panel-alt: rgba(
+    10,
+    18,
+    44,
+    0.45
+  ); /* tiles de estatística, pill de modo */
+  --slt-header: rgba(8, 14, 36, 0.45); /* barra superior, com blur(10px) */
+  --slt-control: rgba(120, 150, 255, 0.07); /* botões da sidebar, nav inativa */
+  --slt-control-hi: rgba(140, 170, 255, 0.16); /* hover */
+  --slt-nav-active: rgba(140, 175, 255, 0.22);
+
+  /* TEXTO */
+  --slt-text: #e9edff; /* corpo */
+  --slt-text-bright: #f4f7ff; /* dígitos do timer, títulos */
+  --slt-text-muted: rgba(206, 218, 255, 0.62);
+  --slt-text-faint: rgba(190, 205, 255, 0.45); /* eyebrows de seção */
+  --slt-link: #7fb2ff;
+  --slt-link-hover: #b9d4ff;
+
+  /* ACENTOS POR ESTÁGIO */
+  --slt-stage-nebula: #8fa8ff;
+  --slt-stage-protostar: #a98bff;
+  --slt-stage-main-sequence: #ffe08a;
+  --slt-stage-red-giant: #ff9a7a;
+  --slt-stage-supernova: #ff7ad9;
+  --slt-stage-cooling-nebula: #7fd8ff;
+
+  /* BORDAS E RAIOS */
+  --slt-border: rgba(150, 180, 255, 0.18);
+  --slt-border-hi: rgba(180, 205, 255, 0.5);
+  --slt-border-warm: rgba(255, 210, 150, 0.55); /* avatar */
+
+  --slt-radius-pill: 999px; /* todos os botões, badges, barras de progresso */
+  --slt-radius-card: 18px;
+  --slt-radius-hero: 22px;
+  --slt-radius-tile: 14px;
+
+  /* TIPOGRAFIA */
+  --slt-font-space-grotesk: "Space Grotesk";
+  --slt-font-ibm-plex-mono: "IBM Plex Mono";
+}
