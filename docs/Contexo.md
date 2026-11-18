@@ -712,7 +712,7 @@ Registradas para que ninguém (pessoa ou IA) siga a fonte desatualizada por enga
 |13|Âncoras de schema|Doc 08: `room_id`, `visibility`, `theme_id`|**Descartadas** — o ER cobre só o MVP|
 |14|Log de sessão|Docs 03/08: só pausa acumulada|ER: `sessao_evento` (servidor em `ocorrido_em`, cliente em `reportado_em`)|
 |15|Testes|A política anterior suspendia testes automatizados por IA durante M0|**Q-4** define autonomia, cobertura inicial e transição da CI (§10.1)|
-|17|Regras D-1 a D-11|Este contexto e doc 05 ainda as chamavam de abertas|Decididas em [[10-domain-rules-decisions]] (05/11/2026)|
+|17|Regras D-1 a D-11|Este contexto e doc 05 ainda as chamavam de abertas|Decididas em [10-domain-rules-decisions](10-domain-rules-decisions) (05/11/2026)|
 |16|Índice da documentação do repositório|`README-INTERNAL.md` lista o doc 07 e usa links `docs/...`|O índice pertence à documentação anterior. A `dev` usa `README-DEV.md` (§3)|
 
 ---
@@ -737,10 +737,10 @@ Consulte [[Backlog]] para andamento, issues e marcos. Esta seção mantém a ref
 |ID|Item|Tabelas|Bloqueado por|
 |---|---|---|---|
 |**BL-07**|`identidade`: cadastro (com `fuso_horario` obrigatório), login, refresh, logout, perfil, configurações|`usuario`, `identidade`, `perfil`, `configuracoes_usuario`, `refresh_token`|A-2 e ABERTO-08 decididos na #66. Atualização do ER pendente.|
-|**BL-08**|`sessao`: iniciar, pausar, retomar, concluir, abandonar; `sessao_evento` em cada transição; job conclui sessões vencidas e abandona pausas acima de 10 min; histórico|`sessao`, `sessao_evento`|D-1 a D-4 resolvidos em [[10-domain-rules-decisions]]|
-|**BL-09**|`anotacao`: CRUD de notas de sessão e de dia|`anotacao`|D-8 resolvido em [[10-domain-rules-decisions]]|
-|**BL-10**|`progressao`: catálogos, ledger de XP, nível/patente derivados, 22 insígnias, 6 constelações e _orbit_ na leitura|`ganho_xp`, `limite_nivel`, `patente`, `insignia*`, `constelacao*`|D-5 a D-7, D-9 e D-11 resolvidos em [[10-domain-rules-decisions]]|
-|**BL-11**|`social`: enviar, aceitar (via trigger), recusar e cancelar pedido; desfazer amizade; bloqueio; matriz de visibilidade|`pedido_amizade`, `amizade`, `lista_bloqueio`|**L-5**|
+|**BL-08**|`sessao`: iniciar, pausar, retomar, concluir, abandonar; `sessao_evento` em cada transição; job conclui sessões vencidas e abandona pausas acima de 10 min; histórico|`sessao`, `sessao_evento`|D-1 a D-4 resolvidos em [10-domain-rules-decisions](10-domain-rules-decisions.md)|
+|**BL-09**|`anotacao`: CRUD de notas de sessão e de dia|`anotacao`|D-8 resolvido em [10-domain-rules-decisions](10-domain-rules-decisions.md)|
+|**BL-10**|`progressao`: catálogos, ledger de XP, nível/patente derivados, 22 insígnias, 6 constelações e _orbit_ na leitura|`ganho_xp`, `limite_nivel`, `patente`, `insignia*`, `constelacao*`|D-5 a D-7, D-9 e D-11 resolvidos em [10-domain-rules-decisions](10-domain-rules-decisions.md)|
+|**BL-11**|`social`: enviar, aceitar (via trigger), recusar e cancelar pedido; desfazer amizade; bloqueio; matriz de visibilidade|`pedido_amizade`, `amizade`, `lista_bloqueio`|L-5 resolvido em [05-planning-checklist](05-planning-checklist.md)|
 
 ### Infra, assíncrono e documentação
 
@@ -770,7 +770,7 @@ Consulte [[Backlog]] para andamento, issues e marcos. Esta seção mantém a ref
 | **T-3** Migrations            | Flyway                                                                         | `pom.xml`                     |
 | **Q-2** Branches e review     | `main`/`dev`/`<tipo>/*`                                                        | Doc 06                        |
 | **Q-3** Rastreador de issues  | GitHub Issues com templates e triagem automática                               | `.github/`                    |
-| **D-1 a D-11**                | Regras fechadas; curva até nível 60, 12 patentes, 22 insígnias, 6 constelações | [[10-domain-rules-decisions]] |
+| **D-1 a D-11**                | Regras fechadas; curva até nível 60, 12 patentes, 22 insígnias, 6 constelações | [10-domain-rules-decisions](10-domain-rules-decisions) |
 | Fontes da verdade             | Diagrama ER e diagrama macro são fontes máximas                                | Time, 04/11                   |
 | **Q-4** Estratégia de testes | Testes por IA autorizados conforme §10.1. Suíte obrigatória na CI após execução reproduzível | Revisão de 17/11/2026 |
 | ABERTO-01 Idioma do código    | Nomes de domínio, métodos e campos em português; sufixos de papel das classes e pacotes em inglês; constantes de enum seguem as migrations                             | Time, 04/11                   |
@@ -781,14 +781,13 @@ Consulte [[Backlog]] para andamento, issues e marcos. Esta seção mantém a ref
 | ABERTO-07 Constelações        | Entram no MVP                                                                  | Time, 04/11                   |
 | **ABERTO-08** Provedor de identidade | `provedor` obrigatório com `CHECK (provedor IN ('PASSWORD'))`. Identidades `PASSWORD` exigem `senha_hash` e têm `id_externo` nulo. Adotar `UNIQUE (usuario_id, provedor)` e manter `UNIQUE (provedor, id_externo)` para futuros logins sociais. Registro no ER pendente na #66. A migration fica para a #74. | [#66](https://github.com/muliroZ/StarlightTimer/issues/66) |
 | ABERTO-09 `sessao_evento`     | `ocorrido_em` = servidor; `reportado_em` = cliente                             | Time, 04/11                   |
+| **L-5** Visibilidade entre amigos | Matriz campo a campo fechada (identidade pública + progressão agregada/conquistas visíveis; histórico, atividade atual e anotações **D-8** na coluna "nunca"; 404 para amizade desfeita e bloqueio) | [05-planning-checklist](05-planning-checklist.md) (#67) |
 
 ### Em aberto — travam o MVP (doc 05)
 
-| ID      | Pergunta                                            | Onde trava                          |
-| ------- | --------------------------------------------------- | ----------------------------------- |
-| **L-5** | Matriz campo a campo do que um amigo vê             | Serviços de `social` e `progressao` |
+Nenhuma pendência do doc 05 trava o MVP no momento; **L-5** foi resolvido em [05-planning-checklist](05-planning-checklist.md) (#67).
 
-D-1 a D-11 estão resolvidos em [[10-domain-rules-decisions]]. D-12 permanece pós-MVP.
+D-1 a D-11 estão resolvidos em [10-domain-rules-decisions](10-domain-rules-decisions). D-12 permanece pós-MVP.
 
 ### Em aberto — levantadas neste documento
 
