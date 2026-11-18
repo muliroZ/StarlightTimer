@@ -1,6 +1,6 @@
 # 08 — Inventário de Entidades por Escopo
 
-**Revisado em 17/11/2026.** O diagrama ER prevalece sobre esta lista. [Contexo](Contexo.md) §7 detalha as colunas e constraints; [10-domain-rules-decisions](10-domain-rules-decisions.md) define comportamento e seeds.
+**Revisado em 17/11/2026.** O diagrama ER prevalece sobre esta lista. [[Contexo]] §7 detalha as colunas e constraints; [[10-domain-rules-decisions]] define comportamento e seeds.
 
 ## MVP — 19 tabelas do ER
 
@@ -27,12 +27,12 @@
 
 ## Catálogos iniciais
 
-A migration `V6__seed_catalogos.sql` contém 60 níveis (nível 60: 45.725 XP), 12 patentes, 22 insígnias, seis constelações e 18 pares em `insignia_constelacao`. Critérios, nomes e recompensas estão em [10-domain-rules-decisions](10-domain-rules-decisions.md). Confira o ER e a V6 antes de propor alterações no catálogo.
+A migration `V6__seed_catalogos.sql` contém 60 níveis (nível 60: 45.725 XP), 12 patentes, 22 insígnias, seis constelações e 18 pares em `insignia_constelacao`. Critérios, nomes e recompensas estão em [[10-domain-rules-decisions]]. Confira o ER e a V6 antes de propor alterações no catálogo.
 
 ## Pós-MVP e infraestrutura a modelar
 
-Salas co-op, presença, música, cosméticos, lembretes e ranking são pós-MVP. D-10 define o ranking calculado na leitura; `LEADERBOARD_SNAPSHOT` não é necessária para a regra atual. Outbox e schema de auditoria foram decididos arquiteturalmente, mas **ainda precisam ser desenhados no ER** antes de migrations (BL-12/BL-13). O worker de autenticação continua em aberto (ABERTO-03).
+Salas co-op, presença, música, cosméticos, lembretes e ranking são pós-MVP. D-10 define o ranking calculado na leitura; `LEADERBOARD_SNAPSHOT` não é necessária para a regra atual. A tabela de outbox já está no [ER atualizado](Modelo%20ER%20-%20StarlightTimer%288%29.png) (#69). A migration fica na #77 (BL-12). O schema de auditoria é tratado na #83 (BL-13). O worker de autenticação continua em aberto (ABERTO-03).
 
 ## Bloqueios reais
 
-D-1 a D-11 foram resolvidos. A-2 e ABERTO-08 foram decididos na #66. As restrições de `identidade` ainda precisam entrar no ER antes da migration de cadastro (#74). L-5 (visibilidade entre amigos) segue em aberto. Para futuras features, D-12 e R-1 a R-8 seguem abertos. [05-planning-checklist](05-planning-checklist.md) mantém os IDs.
+D-1 a D-11 foram resolvidos. A-2 e ABERTO-08 foram decididos na #66. As restrições de `identidade` ainda precisam entrar no ER antes da migration de cadastro (#74). L-5 (visibilidade entre amigos) segue em aberto. Para futuras features, D-12 e R-1 a R-8 seguem abertos. [[05-planning-checklist]] mantém os IDs.

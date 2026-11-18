@@ -1,6 +1,6 @@
 # 02 — Arquitetura
 
-**Revisado em 17/11/2026.** O desenho [Macro-arquitetura](Macro-arquitetura.md) define a topologia; [Contexo](Contexo.md) §5–6 define responsabilidades e regras de dependência. O ER define o schema. As regras de tempo, XP, orbit e constelações estão em [10-domain-rules-decisions](10-domain-rules-decisions.md).
+**Revisado em 17/11/2026.** O desenho [[Macro-arquitetura]] define a topologia; [[Contexo]] §5–6 define responsabilidades e regras de dependência. O ER define o schema. As regras de tempo, XP, orbit e constelações estão em [[10-domain-rules-decisions]].
 
 ## Topologia
 
@@ -35,11 +35,11 @@ Toda mudança de schema começa no ER e segue para uma migration Flyway nova. `s
 
 ## AD-5 e AD-6 — Progressão
 
-A conclusão emite evento interno (`ApplicationEventPublisher`); `progressao` concede XP, avalia insígnias e constelações na mesma transação da conclusão, de forma consistente com a resposta HTTP. `ganho_xp` é ledger append-only, com uma origem por linha. `perfil.xp_total` é cache transacional do ledger. Níveis, patentes e orbit são derivados. D-5 a D-11 estão detalhados em [10-domain-rules-decisions](10-domain-rules-decisions.md).
+A conclusão emite evento interno (`ApplicationEventPublisher`); `progressao` concede XP, avalia insígnias e constelações na mesma transação da conclusão, de forma consistente com a resposta HTTP. `ganho_xp` é ledger append-only, com uma origem por linha. `perfil.xp_total` é cache transacional do ledger. Níveis, patentes e orbit são derivados. D-5 a D-11 estão detalhados em [[10-domain-rules-decisions]].
 
 ## Eventos externos e outbox
 
-Eventos para workers não saem diretamente do serviço para Kafka. A transação de negócio grava uma linha de outbox; um publicador agendado envia ao Kafka e marca como publicada. A entrega é *at-least-once*, então consumidores deduplicam pelo ID do evento. Tópicos e payloads JSON são contratos versionados. A tabela de outbox e o schema de auditoria ainda precisam entrar no ER antes das migrations (BL-12/BL-13).
+Eventos para workers não saem diretamente do serviço para Kafka. A transação de negócio grava uma linha de outbox; um publicador agendado envia ao Kafka e marca como publicada. A entrega é *at-least-once*, então consumidores deduplicam pelo ID do evento. A tabela de outbox já está no ER. A #69 definiu os tópicos, o envelope JSON versionado e o primeiro lote de eventos em [Mapeamento de Eventos](11-event-mapping.md). A migration e a publicação no Kafka seguem na #77. O schema de auditoria é tratado na #83 (BL-13).
 
 ## Fora do MVP
 

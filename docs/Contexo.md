@@ -42,7 +42,7 @@ Aplicação web de Pomodoro com tema espacial e progressão gamificada. Um ciclo
 
 Fora do MVP: salas co-op, música/ambiência, lembretes, cosméticos, leaderboards. Ver doc 01 para o catálogo completo.
 
-**Marco concluído:** M0 foi entregue em **06/11/2026**, com 20 de 20 issues fechadas. O [Backlog](Backlog.md) acompanha os próximos marcos. A política de testes pós-M0 está na §10.1.
+**Marco concluído:** M0 foi entregue em **06/11/2026**, com 20 de 20 issues fechadas. O [[Backlog]] acompanha os próximos marcos. A política de testes pós-M0 está na §10.1.
 
 ---
 
@@ -53,10 +53,10 @@ Os documentos foram escritos em momentos diferentes e **discordam entre si** em 
 |Prioridade|Fonte|Manda em|
 |---|---|---|
 |**Máxima**|[Diagrama ER](<Modelo ER - StarlightTimer(4).png>)|Tabelas, colunas, tipos, nulidade, relacionamentos, constraints|
-|**Máxima**|Diagrama de [Macro-arquitetura](Macro-arquitetura.md)|Topologia: nginx, API, Redis, Kafka, workers, estilo hexagonal + event-driven|
+|**Máxima**|Diagrama de [[Macro-arquitetura]]|Topologia: nginx, API, Redis, Kafka, workers, estilo hexagonal + event-driven|
 |2|Código, migrations Flyway e `pom.xml`|Stack, versões, pacote base, **valores de enum** e tudo que os diagramas não especificam|
 |3|**Este documento**|Organização hexagonal, convenções de código, regras de IA, backlog|
-|3|[10-domain-rules-decisions](10-domain-rules-decisions.md)|Decisões específicas D-1 a D-11; prevalece sobre trechos anteriores deste contexto quando tratar desses IDs|
+|3|[[10-domain-rules-decisions]]|Decisões específicas D-1 a D-11; prevalece sobre trechos anteriores deste contexto quando tratar desses IDs|
 |4|`docs/08-entity-inventory.md`|Racional de escopo das entidades|
 |5|Notas 01 a 09|Produto, modelo, design system, processo e planejamento|
 
@@ -81,7 +81,7 @@ Retrato da `dev` remota em **17/11/2026** (`51bcf45`, após o PR #106 da políti
 - **Banco e infraestrutura local:** migrations Flyway V1–V6, `Dockerfile`, `docker-compose.yaml` para API, PostgreSQL e Redis e `.env.example`.
 - **CI e testes:** `.github/workflows/ci.yml` verifica o build nos PRs para `dev` e `main` com `./mvnw -DskipTests verify`. A base de integração com Testcontainers está em `src/test`. Ver §10.1 para a estratégia e a transição da CI.
 - **Documentação:** `README-DEV.md` reúne o setup e os fluxos locais. O `README.md` da raiz contém o título. As notas do Obsidian têm uma cópia de referência na `dev-docs` (#66). O alinhamento dos guias na branch de código segue em BL-15.
-- **Próximas entregas na `dev`:** frontend (BL-16), outbox e Kafka (BL-12), worker de auditoria (BL-13) e nginx (BL-14). O [Backlog](Backlog.md) acompanha os marcos e as issues.
+- **Próximas entregas na `dev`:** frontend (BL-16), outbox e Kafka (BL-12), worker de auditoria (BL-13) e nginx (BL-14). O [[Backlog]] acompanha os marcos e as issues.
 
 ---
 
@@ -214,7 +214,7 @@ Para publicar no Kafka sem perder nem inventar mensagens:
 2. Um **publicador** (job agendado na API) lê as linhas ainda não publicadas, em ordem, publica no Kafka e marca a linha como publicada.
 3. Se a API cair entre a publicação e a marcação, a mensagem é publicada de novo → a entrega é **at-least-once** → **todo consumidor precisa ser idempotente**, usando o ID do evento para descartar duplicatas.
 
-A tabela de outbox **ainda não está no ER**. Pela regra de §2, ela é desenhada no ER antes da migration (**BL-12**). Colunas típicas, como ponto de partida para a discussão: `id`, `tipo_agregado`, `id_agregado`, `tipo_evento`, `payload` (JSONB), `criado_em`, `publicado_em` (anulável).
+A tabela de outbox está no [ER atualizado](Modelo%20ER%20-%20StarlightTimer%288%29.png) (#69). A migration fica na #77 (**BL-12**). Colunas definidas no ER: `id`, `tipo_agregado`, `id_agregado`, `tipo_evento`, `payload` (JSONB), `criado_em`, `publicado_em` (anulável).
 
 ### O que continua valendo do doc 02
 
@@ -423,7 +423,7 @@ Como isso convive com o hexágono:
 - **`ganho_xp` não tem origem para bônus de streak.** Se **D-5** incluir esse bônus, o ER muda primeiro.
 - **Âncoras do doc 08 (`room_id`, `visibility`, `theme_id`) foram descartadas** de propósito: o ER cobre só o MVP. Quando essas features forem aprovadas, entram por migration.
 - **Pausa longa** não tem faixa no CHECK de `sessao.tipo`, coerente com **D-12** estar em "depois".
-- **Tabela de outbox e schema de auditoria ainda não estão no ER** — ver §5 e BL-12/BL-13.
+- **Outbox** está no ER (#69). O schema de auditoria é tratado na #83. Ver §5 e BL-12/BL-13.
 
 ---
 
@@ -445,7 +445,7 @@ Regras já decididas — implemente exatamente assim:
 12. **Evento para fora da API sai pelo outbox**, gravado na mesma transação do estado de negócio (§5).
 13. **D-2 — Teto de pausa:** apenas foco pode ser pausado. Ao ultrapassar 10 minutos acumulados, a sessão vira `ABANDONED`, sem XP; registre a transição em `sessao_evento`. A decisão foi confirmada pelo time em 05/11/2026 e substitui a antiga regra de apenas rejeitar a conclusão.
 
-Os números, catálogos e casos de borda de D-1 a D-11 estão em [10-domain-rules-decisions](10-domain-rules-decisions.md). As regras ainda abertas estão em [§14](#14--decis%C3%B5es-resolvidas-e-em-aberto). Não as invente.
+Os números, catálogos e casos de borda de D-1 a D-11 estão em [[10-domain-rules-decisions]]. As regras ainda abertas estão em [§14](#14--decis%C3%B5es-resolvidas-e-em-aberto). Não as invente.
 
 ---
 
@@ -686,7 +686,7 @@ curl -X POST http://localhost:8080/sessoes \
 ### 11.6 — Publicar um evento
 
 - **Interno** (outro módulo da API reage): defina o evento como `record` em `domain/<module>/events`, publique por uma porta de saída cujo adaptador usa `ApplicationEventPublisher`, e escute no outro módulo com `@TransactionalEventListener`.
-- **Externo** (worker reage): o serviço chama uma porta de saída (ex.: `PublicarEventoPort`) cujo adaptador **grava no outbox** dentro da transação corrente. O publicador agendado em `adapters/shared/out/outbox` leva ao Kafka. O payload é um DTO próprio de mensageria, versionado (convenção proposta de tópico: `starlight.<modulo>.<evento>.v1`, ex.: `starlight.progressao.insignia-desbloqueada.v1`, a confirmar em **BL-12**). Nunca serialize a entidade JPA nem o modelo de domínio diretamente.
+- **Externo** (worker reage): o serviço chama uma porta de saída (ex.: `PublicarEventoPort`) cujo adaptador **grava no outbox** dentro da transação corrente. O publicador agendado em `adapters/shared/out/outbox` leva ao Kafka. O adaptador grava o envelope completo com um DTO próprio no campo `payload`. O publicador envia o JSON persistido para `starlight.<agregado-no-plural>`, com a versão em `metadata.versao_payload`. O contrato e o primeiro lote estão em [Mapeamento de Eventos](11-event-mapping.md) (#69).
 - **Consumidores** (workers) deduplicam pelo ID do evento, porque a entrega é at-least-once.
 
 ---
@@ -712,14 +712,14 @@ Registradas para que ninguém (pessoa ou IA) siga a fonte desatualizada por enga
 |13|Âncoras de schema|Doc 08: `room_id`, `visibility`, `theme_id`|**Descartadas** — o ER cobre só o MVP|
 |14|Log de sessão|Docs 03/08: só pausa acumulada|ER: `sessao_evento` (servidor em `ocorrido_em`, cliente em `reportado_em`)|
 |15|Testes|A política anterior suspendia testes automatizados por IA durante M0|**Q-4** define autonomia, cobertura inicial e transição da CI (§10.1)|
-|17|Regras D-1 a D-11|Este contexto e doc 05 ainda as chamavam de abertas|Decididas em [10-domain-rules-decisions](10-domain-rules-decisions.md) (05/11/2026)|
+|17|Regras D-1 a D-11|Este contexto e doc 05 ainda as chamavam de abertas|Decididas em [[10-domain-rules-decisions]] (05/11/2026)|
 |16|Índice da documentação do repositório|`README-INTERNAL.md` lista o doc 07 e usa links `docs/...`|O índice pertence à documentação anterior. A `dev` usa `README-DEV.md` (§3)|
 
 ---
 
 ## 13 — Backlog imediato
 
-Consulte [Backlog](Backlog.md) para andamento, issues e marcos. Esta seção mantém a referência dos IDs **BL-01 a BL-18**.
+Consulte [[Backlog]] para andamento, issues e marcos. Esta seção mantém a referência dos IDs **BL-01 a BL-18**.
 
 ### Fundação
 
@@ -746,7 +746,7 @@ Consulte [Backlog](Backlog.md) para andamento, issues e marcos. Esta seção man
 
 |ID|Item|Observação|
 |---|---|---|
-|**BL-12**|Outbox + Kafka: desenhar a tabela de outbox no ER, migration, adaptador de gravação, publicador agendado, dependência e container do Kafka, convenção de tópicos e payloads|Decisão tomada: transactional outbox|
+|**BL-12**|Outbox + Kafka: desenhar a tabela de outbox no ER, migration, adaptador de gravação, publicador agendado, dependência e container do Kafka, convenção de tópicos e payloads|ER e contrato definidos na #69. Implementação na #77|
 |**BL-13**|Worker de Auditoria: definir nome e estrutura do schema próprio (desenhar no ER), consumidor idempotente|ABERTO-10|
 |**BL-14**|nginx: proxy reverso para API + estáticos do frontend, no compose|Junto com a integração do frontend|
 |**BL-15**|Publicar as notas do Obsidian na `dev-docs` e alinhar os guias da branch de código|Cópia de referência na #66; guias da branch de código nas #100 e #101|
@@ -770,7 +770,7 @@ Consulte [Backlog](Backlog.md) para andamento, issues e marcos. Esta seção man
 | **T-3** Migrations            | Flyway                                                                         | `pom.xml`                     |
 | **Q-2** Branches e review     | `main`/`dev`/`<tipo>/*`                                                        | Doc 06                        |
 | **Q-3** Rastreador de issues  | GitHub Issues com templates e triagem automática                               | `.github/`                    |
-| **D-1 a D-11**                | Regras fechadas; curva até nível 60, 12 patentes, 22 insígnias, 6 constelações | [10-domain-rules-decisions](10-domain-rules-decisions.md) |
+| **D-1 a D-11**                | Regras fechadas; curva até nível 60, 12 patentes, 22 insígnias, 6 constelações | [[10-domain-rules-decisions]] |
 | Fontes da verdade             | Diagrama ER e diagrama macro são fontes máximas                                | Time, 04/11                   |
 | **Q-4** Estratégia de testes | Testes por IA autorizados conforme §10.1. Suíte obrigatória na CI após execução reproduzível | Revisão de 17/11/2026 |
 | ABERTO-01 Idioma do código    | Nomes de domínio, métodos e campos em português; sufixos de papel das classes e pacotes em inglês; constantes de enum seguem as migrations                             | Time, 04/11                   |
@@ -787,7 +787,7 @@ Consulte [Backlog](Backlog.md) para andamento, issues e marcos. Esta seção man
 
 Nenhuma pendência do doc 05 trava o MVP no momento; **L-5** foi resolvido em [05-planning-checklist](05-planning-checklist.md) (#67).
 
-D-1 a D-11 estão resolvidos em [10-domain-rules-decisions](10-domain-rules-decisions.md). D-12 permanece pós-MVP.
+D-1 a D-11 estão resolvidos em [[10-domain-rules-decisions]]. D-12 permanece pós-MVP.
 
 ### Em aberto — levantadas neste documento
 
