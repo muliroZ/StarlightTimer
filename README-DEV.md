@@ -48,23 +48,11 @@ Os pacotes usam nomes em inglês. Modelos, métodos, campos e mensagens usam por
 
 ## 3. Implementar um caso de uso
 
-<<<<<<< Updated upstream
-1. Modele as invariantes e transições em `domain/<module>`. Injete `Clock` para leituras de tempo; não use `Instant.now()` ou `LocalDate.now()` sem relógio.
-2. Defina a porta de entrada e o comando em `app/<module>/ports/in`; declare as necessidades externas em `app/<module>/ports/out`.
-3. Implemente a orquestração em `app/<module>/usecases`, com dependências recebidas pelo construtor e a transação necessária ao fluxo.
-4. Implemente as portas de saída em `adapters/<module>/out`. Entidades JPA são separadas dos modelos de domínio, convertidas por mapeadores e declaram `@Table(name = ...)` explicitamente.
-5. Implemente o controlador em `adapters/<module>/in/web`, dependendo da porta de entrada. Receba e devolva DTOs próprios (`record`), com Bean Validation para formato e obrigatoriedade.
-6. Traduza exceções de domínio para `ProblemDetail` (RFC 9457) em `adapters/shared/in/web`. Invariantes de negócio permanecem no domínio.
-7. Registre a verificação realizada e os resultados no PR.
-
-Evite interfaces especulativas, mediadores genéricos, CQRS e event sourcing completo. Um catálogo somente leitura pode ter uma única porta de leitura.
-=======
 1. Modele as regras em `core/<module>/domain` e injete `Clock` nos serviços que precisam consultar a hora.
 2. Implemente a operação no serviço, com as dependências no construtor e a transação adequada ao fluxo.
 3. Agrupe operações de banco relacionadas no mesmo repositório. Use uma implementação customizada do Spring Data para operações que precisam de lógica de persistência própria. Declare `@Table(name = ...)` nas entidades JPA e use mapeadores para converter entre entidade e domínio.
 4. No controller, injete o serviço e use Bean Validation para formato e obrigatoriedade dos dados de entrada. Os handlers em `controller` traduzem exceções para `ProblemDetail` (RFC 9457).
 5. Registre os passos de verificação manual e os resultados no PR.
->>>>>>> Stashed changes
 
 ### Persistência, cache e eventos
 
