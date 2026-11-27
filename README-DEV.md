@@ -30,6 +30,8 @@ dev.amigoes.starlighttimer/
 │   └── social/
 ├── controller/
 ├── events/
+│   └── kafka/
+│       └── outbox/
 ├── exceptions/
 ├── enums/
 ├── records/
@@ -44,6 +46,7 @@ Os pacotes usam nomes em inglês. Modelos, métodos, campos e mensagens usam por
 - `core/identity/currentuser` reúne `UsuarioAtualPort` e suas duas implementações selecionadas por perfil.
 - `controller` contém controllers e handlers HTTP. Comandos e DTOs ficam em `records/<module>`. Os enums também são agrupados por módulo.
 - `events` reúne os eventos de aplicação, seus tipos auxiliares e listeners. `SessaoConcluida` dispara a concessão de XP. `SessaoEvento` faz parte do histórico do timer e fica em `core/session/domain`.
+- `events/kafka` contém o envelope, os metadados e os enums do contrato Kafka. Em `events/kafka/outbox` ficam a entidade, o repositório e o publicador agendado.
 - `exceptions` contém as exceções comuns. `config` reúne as configurações transversais.
 
 ## 3. Implementar um caso de uso

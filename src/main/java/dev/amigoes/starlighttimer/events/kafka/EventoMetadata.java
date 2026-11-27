@@ -1,4 +1,6 @@
-package dev.amigoes.starlighttimer.adapters.shared.out.outbox.contract;
+package dev.amigoes.starlighttimer.events.kafka;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -6,11 +8,11 @@ import java.util.UUID;
 
 public record EventoMetadata(
     UUID id,
-    TipoEvento tipoEvento,
-    TipoAgregado tipoAgregado,
-    UUID agregadoId,
-    Instant criadoEm,
-    int versaoPayload
+    @JsonProperty("tipo_evento") TipoEvento tipoEvento,
+    @JsonProperty("tipo_agregado") TipoAgregado tipoAgregado,
+    @JsonProperty("agregado_id") UUID agregadoId,
+    @JsonProperty("criado_em") Instant criadoEm,
+    @JsonProperty("versao_payload") int versaoPayload
 ) {
     public static EventoMetadata gerar(
             TipoEvento tipoEvento,

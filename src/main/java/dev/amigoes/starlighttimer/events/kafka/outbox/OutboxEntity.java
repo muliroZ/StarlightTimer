@@ -1,7 +1,7 @@
-package dev.amigoes.starlighttimer.adapters.shared.out.outbox.persistence;
+package dev.amigoes.starlighttimer.events.kafka.outbox;
 
-import dev.amigoes.starlighttimer.adapters.shared.out.outbox.contract.TipoAgregado;
-import dev.amigoes.starlighttimer.adapters.shared.out.outbox.contract.TipoEvento;
+import dev.amigoes.starlighttimer.events.kafka.TipoAgregado;
+import dev.amigoes.starlighttimer.events.kafka.TipoEvento;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;

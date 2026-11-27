@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.adapters.shared.out.outbox.contract;
+package dev.amigoes.starlighttimer.events.kafka;
 
 import java.util.Map;
 

@@ -20,6 +20,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       REDIS_HOST: star-redis
       REDIS_PORT: 6379
+      KAFKA_BOOTSTRAP_SERVERS: star-kafka:29092
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     networks:

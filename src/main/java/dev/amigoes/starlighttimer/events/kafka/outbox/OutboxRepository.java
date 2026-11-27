@@ -1,4 +1,4 @@
-package dev.amigoes.starlighttimer.adapters.shared.out.outbox.persistence;
+package dev.amigoes.starlighttimer.events.kafka.outbox;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
