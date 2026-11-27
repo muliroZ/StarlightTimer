@@ -16,6 +16,7 @@ import dev.amigoes.starlighttimer.events.SessaoConcluida;
 import dev.amigoes.starlighttimer.events.kafka.EventoEnvelope;
 import dev.amigoes.starlighttimer.events.kafka.EventoMetadata;
 import dev.amigoes.starlighttimer.events.kafka.TipoEvento;
+import dev.amigoes.starlighttimer.events.kafka.payloads.SessaoConcluidaPayloadV1;
 import dev.amigoes.starlighttimer.events.kafka.payloads.SessaoIniciadaPayloadV1;
 import dev.amigoes.starlighttimer.exceptions.RecursoNaoEncontradoException;
 import dev.amigoes.starlighttimer.records.session.ResultadoTransicao;
@@ -98,7 +99,7 @@ public class GerenciarSessaoService {
 
     @Transactional(noRollbackFor = ConclusaoAntecipadaException.class)
     public ResultadoTransicao transicionar(UUID id, AcaoSessao acao, OffsetDateTime reportadoEm) {
-        Sessao sessao = sessoes.buscarPorIdEUsuario(id, usuarioAtual.getUsuarioId())
+        Sessao sessao = sessoes.buscarPorIdEUsuarioParaAtualizar(id, usuarioAtual.getUsuarioId())
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Sessao nao encontrada"));
 
         SessaoEvento evento;
@@ -140,6 +141,10 @@ public class GerenciarSessaoService {
                 sessao.getTipo(), sessao.getDuracaoPlanejada(), sessao.getTerminadoEm().toInstant());
 
         eventos.publishEvent(evento);
+        gravador.gravar(new EventoEnvelope<>(
+                EventoMetadata.gerar(TipoEvento.SESSAO_CONCLUIDA, sessao.getId(), clock, 1),
+                new SessaoConcluidaPayloadV1(sessao.getUsuarioId(), sessao.getTipo(), sessao.getTempoDeFoco())
+        ));
         return evento;
     }
 }
