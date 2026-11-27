@@ -2,82 +2,53 @@
 
 Este guia segue o contexto do projeto (`AGENTS.md` na raiz ou `Contexo.md` nas notas do Obsidian). O ER define o schema e o diagrama de macro-arquitetura define a topologia. As decisões D-1 a D-11 estão em `10-domain-rules-decisions.md` no Obsidian.
 
-As camadas e os módulos usam nomes em inglês. A camada vem primeiro: `domain/progression`, `domain/session`, `app/session` e `adapters/session`. Nomes de domínio, métodos, campos e mensagens de exceção continuam em português; os sufixos de papel das classes usam inglês, como Service, Controller e Repository.
-
 ## 1. Arquitetura e dependências
 
-O backend usa arquitetura hexagonal por módulo de feature, com eventos internos entre módulos e Kafka via transactional outbox para consumidores externos.
+Os cinco módulos do backend ficam em `core`. O domínio de cada módulo é escrito em Java puro e usa tipos como os enums, records puros e exceções do projeto. Invariantes e transições de estado ficam no domínio. Os serviços coordenam os casos de uso e delimitam suas transações com Spring.
 
-O fluxo de dependência aponta para o núcleo:
-
-`adapters → app → domain`
-
-- `domain` contém modelos, invariantes, eventos e exceções, usando apenas Java e tipos do próprio domínio. Não importa Spring, JPA, Redis ou Kafka.
-- `app` contém portas e serviços que orquestram os casos de uso. Depende do domínio e das próprias portas. Serviços podem usar `@Service` e `@Transactional`; outros imports do Spring ficam fora dessa camada.
-- `adapters` implementa as portas de saída e traduz entradas externas para chamadas às portas de entrada.
-- `shared`, dentro de cada camada, contém tipos transversais e não importa módulos de feature. Beans e configurações transversais ficam em `config`.
-
-Um módulo acessa outro apenas por sua porta de entrada pública ou por evento de domínio interno. Não importa modelos, entidades JPA, repositórios ou serviços internos de outro módulo.
+Controllers chamam os serviços diretamente. As chamadas entre módulos usam operações públicas, como a verificação de posse de uma sessão, ou eventos internos. O pacote de persistência de cada módulo reúne entidades JPA, mapeadores e repositórios Spring Data ou JDBC. Os repositórios podem compor operações customizadas quando precisam acessar várias tabelas.
 
 ## 2. Organização dos pacotes
 
-O pacote base é `dev.amigoes.starlighttimer`. Os módulos do MVP são `identity`, `session`, `annotation`, `progression` e `social`. Tipos transversais ficam em `shared` dentro da camada correspondente; configurações transversais ficam em `config`.
-
-Cada camada é dividida por módulo. Dentro do módulo, use as subpastas em inglês correspondentes ao papel da classe:
-
 ```text
 dev.amigoes.starlighttimer/
-├── domain/
-│   ├── identity/
-│   ├── session/
-│   │   ├── entities/
-│   │   ├── enums/
-│   │   ├── events/
-│   │   └── exceptions/
+├── core/
 │   ├── annotation/
+│   │   ├── domain/
+│   │   ├── persistence/
+│   │   └── GerenciarAnotacoesService.java
+│   ├── identity/
+│   │   ├── currentuser/
+│   │   ├── domain/
+│   │   ├── persistence/
+│   │   └── usecase/
 │   ├── progression/
-│   │   ├── entities/
-│   │   └── services/
-│   ├── social/
-│   └── shared/
-│       └── exceptions/
-├── app/
 │   ├── session/
-│   │   ├── dto/
-│   │   ├── ports/
-│   │   │   ├── in/
-│   │   │   └── out/
-│   │   └── usecases/
-│   ├── progression/
-│   └── shared/
-│       └── ports/out/
-├── adapters/
-│   ├── session/
-│   │   ├── in/web/
-│   │   └── out/persistence/
-│   ├── progression/
-│   └── shared/
-│       └── out/events/
+│   │   ├── domain/
+│   │   ├── persistence/
+│   │   └── usecase/
+│   └── social/
+├── controller/
+├── events/
+├── exceptions/
+├── enums/
+├── records/
 ├── config/
 └── StarlighttimerApplication.java
 ```
 
-Pacotes, pastas de camada e módulos usam inglês. Nomes de domínio, métodos, campos e mensagens de exceção usam português; sufixos que indicam o papel da classe usam inglês (Service, Controller, Repository, Mapper, Adapter, Entity, Request, Response, UseCase, Command, Port e Exception). Identificadores não têm acentos nem `ç`. Constantes de enum copiam exatamente os valores das migrations; nomes impostos por frameworks e o ponto de entrada gerado permanecem como estão.
+Os pacotes usam nomes em inglês. Modelos, métodos, campos e mensagens usam português. Identificadores evitam acentos e cedilha. Constantes persistidas em enums seguem os valores definidos nas migrations.
 
-| Papel | Exemplo |
-| --- | --- |
-| Modelo e evento | `Sessao`, `SessaoConcluida` |
-| Porta de entrada e comando | `IniciarSessaoUseCase`, `IniciarSessaoCommand` |
-| Serviço de aplicação | `IniciarSessaoService` |
-| Porta de saída | `SalvarSessaoPort` |
-| Persistência | `SessaoEntity`, `SessaoJpaRepository`, `SessaoMapper`, `SessaoPersistenceAdapter` |
-| Web | `SessaoController`, `IniciarSessaoRequest`, `SessaoResponse` |
-| Exceção | `DuracaoInvalidaException` |
-
-A árvore mostra a convenção para os módulos do MVP; diretórios sem implementação não precisam de classes artificiais. `PublicadorEventosPort` fica em `app/shared/ports/out`, e seu adaptador Spring em `adapters/shared/out/events`. `SessaoConcluida` é o contrato público em `domain/session/events`; a progressão reconhece foco por `ehFoco()`, sem importar `domain/session/enums`.
+- `core/<module>/domain` contém modelos, regras e exceções específicas do módulo. O serviço pode ficar na raiz do módulo quando há um único caso de uso.
+- `core/<module>/persistence` reúne entidades, mapeadores e repositórios. Por exemplo, `SessaoRepository` oferece operações sobre sessões e seus registros de evento.
+- `core/identity/currentuser` reúne `UsuarioAtualPort` e suas duas implementações selecionadas por perfil.
+- `controller` contém controllers e handlers HTTP. Comandos e DTOs ficam em `records/<module>`. Os enums também são agrupados por módulo.
+- `events` reúne os eventos de aplicação, seus tipos auxiliares e listeners. `SessaoConcluida` dispara a concessão de XP. `SessaoEvento` faz parte do histórico do timer e fica em `core/session/domain`.
+- `exceptions` contém as exceções comuns. `config` reúne as configurações transversais.
 
 ## 3. Implementar um caso de uso
 
+<<<<<<< Updated upstream
 1. Modele as invariantes e transições em `domain/<module>`. Injete `Clock` para leituras de tempo; não use `Instant.now()` ou `LocalDate.now()` sem relógio.
 2. Defina a porta de entrada e o comando em `app/<module>/ports/in`; declare as necessidades externas em `app/<module>/ports/out`.
 3. Implemente a orquestração em `app/<module>/usecases`, com dependências recebidas pelo construtor e a transação necessária ao fluxo.
@@ -87,6 +58,13 @@ A árvore mostra a convenção para os módulos do MVP; diretórios sem implemen
 7. Registre a verificação realizada e os resultados no PR.
 
 Evite interfaces especulativas, mediadores genéricos, CQRS e event sourcing completo. Um catálogo somente leitura pode ter uma única porta de leitura.
+=======
+1. Modele as regras em `core/<module>/domain` e injete `Clock` nos serviços que precisam consultar a hora.
+2. Implemente a operação no serviço, com as dependências no construtor e a transação adequada ao fluxo.
+3. Agrupe operações de banco relacionadas no mesmo repositório. Use uma implementação customizada do Spring Data para operações que precisam de lógica de persistência própria. Declare `@Table(name = ...)` nas entidades JPA e use mapeadores para converter entre entidade e domínio.
+4. No controller, injete o serviço e use Bean Validation para formato e obrigatoriedade dos dados de entrada. Os handlers em `controller` traduzem exceções para `ProblemDetail` (RFC 9457).
+5. Registre os passos de verificação manual e os resultados no PR.
+>>>>>>> Stashed changes
 
 ### Persistência, cache e eventos
 
@@ -94,7 +72,7 @@ Evite interfaces especulativas, mediadores genéricos, CQRS e event sourcing com
 - PostgreSQL é a fonte da verdade. Redis usa cache-aside; escritas invalidam o cache e falha de cache é tratada como miss. A validação de conclusão de sessão lê estado autoritativo do banco.
 - A progressão reage a eventos internos de conclusão, com XP consistente na mesma transação da sessão. O ledger `ganho_xp` é append-only e `perfil.xp_total` é seu cache transacional.
 - Eventos externos são gravados no outbox na transação de negócio e publicados depois no Kafka. Consumidores precisam ser idempotentes. A tabela de outbox deve estar no ER antes da migration (BL-12).
-- O aceite de amizade atualiza o status do pedido; o trigger cria a amizade e exclui o pedido. O adaptador conhece esse comportamento, faz flush e carrega a amizade para a resposta.
+- O aceite de amizade atualiza o status do pedido; o trigger cria a amizade e exclui o pedido. O repositório faz flush, e o caso de uso carrega a amizade para a resposta.
 
 ## 4. Ambiente local e verificação
 
