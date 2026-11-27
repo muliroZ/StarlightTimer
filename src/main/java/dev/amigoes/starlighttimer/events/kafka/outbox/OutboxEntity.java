@@ -19,7 +19,6 @@ import java.util.UUID;
 public class OutboxEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Enumerated(EnumType.STRING)
@@ -44,12 +43,14 @@ public class OutboxEntity {
     private OffsetDateTime publicadoEm;
 
     public OutboxEntity(
+            UUID id,
             TipoAgregado tipoAgregado,
             UUID agregadoId,
             TipoEvento tipoEvento,
             String payload,
             OffsetDateTime criadoEm
     ) {
+        this.id = id;
         this.tipoAgregado = tipoAgregado;
         this.agregadoId = agregadoId;
         this.tipoEvento = tipoEvento;

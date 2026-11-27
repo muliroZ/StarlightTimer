@@ -1,5 +1,6 @@
 package dev.amigoes.starlighttimer.events.kafka.outbox;
 
+import dev.amigoes.starlighttimer.core.interfaces.PublicadorEventos;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -11,7 +12,7 @@ import java.util.List;
 
 @Slf4j
 @Component
-public class PublicadorOutbox {
+public class PublicadorOutbox implements PublicadorEventos {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final OutboxRepository outboxRepository;
@@ -27,6 +28,7 @@ public class PublicadorOutbox {
         this.clock = clock;
     }
 
+    @Override
     @Scheduled(fixedDelay = 2000)
     @Transactional
     public void publicarEventosPendentes() {
