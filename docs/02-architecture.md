@@ -1,6 +1,6 @@
 # 02 — Arquitetura
 
-**Revisado em 17/11/2026.** O desenho [[Macro-arquitetura]] define a topologia; [[Contexo]] §5–6 define responsabilidades e regras de dependência. O ER define o schema. As regras de tempo, XP, orbit e constelações estão em [[10-domain-rules-decisions]].
+**Revisado em 27/11/2026.** O desenho [[Macro-arquitetura]] define a topologia; [[Contexo]] §5–6 define responsabilidades e regras de dependência. O ER define o schema. As regras de tempo, XP, orbit e constelações estão em [[10-domain-rules-decisions]].
 
 ## Topologia
 
@@ -17,11 +17,11 @@ Na `dev`, o Compose já executa a API, PostgreSQL e Redis. nginx, Kafka, outbox 
 
 Na topologia planejada, nginx recebe `/api/**` e serve o build estático. A API é um único artefato Spring Boot e a única escritora do schema principal. PostgreSQL é a fonte autoritativa; Flyway gerencia o schema com `ddl-auto=validate`. Redis é cache-aside para catálogos e leituras frequentes, com falha tratada como *miss*. O estado que decide conclusão de sessão nunca vem do cache. O worker de auditoria grava em schema separado, ainda a desenhar no ER (ABERTO-10). A posição das tarefas colaterais de autenticação segue aberta (ABERTO-03); login e emissão de token são síncronos na API.
 
-## Hexágonos por módulo
+## Organização do backend
 
-O pacote base é `dev.amigoes.starlighttimer`. A estrutura começa pela camada em inglês (`domain`, `app`, `adapters`, `config`); os módulos também são em inglês: `identity`, `session`, `annotation`, `progression` e `social`. Exemplos: `domain/session/entities`, `domain/session/events`, `domain/progression/services`, `app/session/ports/in`, `app/session/ports/out`, `app/session/usecases` e `adapters/session/in/web`. Tipos transversais ficam em `domain/shared`, `app/shared` e `adapters/shared`; `config` concentra os beans transversais.
+O pacote base é `dev.amigoes.starlighttimer`. Os módulos `identity`, `session`, `annotation`, `progression` e `social` ficam em `core`. Cada módulo mantém suas regras em `domain`, em Java puro, e suas entidades JPA, mapeadores e repositórios Spring em `persistence`. Serviços em `usecase` coordenam as operações. Quando há um único caso de uso, o serviço pode ficar na raiz do módulo, como em `annotation`.
 
-Domínio usa Java puro; aplicação depende do domínio e das próprias portas; adaptadores dependem do núcleo. Um módulo chama outro por porta pública de entrada ou evento de domínio in-process, sem importar modelos, serviços internos, repositórios ou entidades JPA de outro módulo. Nomes de domínio, métodos e campos usam português sem acentos; sufixos de papel das classes, pacotes e pastas usam inglês; enums copiam as migrations. Entidades JPA e DTOs web são separados dos modelos de domínio.
+Os controllers e handlers HTTP ficam em `controller`. Controllers chamam os serviços diretamente, e os módulos se comunicam por serviços públicos ou eventos internos. Eventos, listeners e tipos auxiliares dos eventos ficam em `events`. `enums` e `records` agrupam os demais tipos por módulo. Exceções comuns ficam em `exceptions`, e configurações, em `config`. A árvore completa está em [[Contexo]] §6.
 
 ## AD-2 — Tempo autoritativo no servidor
 
@@ -35,7 +35,7 @@ Toda mudança de schema começa no ER e segue para uma migration Flyway nova. `s
 
 ## AD-5 e AD-6 — Progressão
 
-A conclusão emite evento interno (`ApplicationEventPublisher`); `progressao` concede XP, avalia insígnias e constelações na mesma transação da conclusão, de forma consistente com a resposta HTTP. `ganho_xp` é ledger append-only, com uma origem por linha. `perfil.xp_total` é cache transacional do ledger. Níveis, patentes e orbit são derivados. D-5 a D-11 estão detalhados em [[10-domain-rules-decisions]].
+A conclusão emite evento interno (`ApplicationEventPublisher`); `progression` concede XP, avalia insígnias e constelações na mesma transação da conclusão, de forma consistente com a resposta HTTP. `ganho_xp` é ledger append-only, com uma origem por linha. `perfil.xp_total` é cache transacional do ledger. Níveis, patentes e orbit são derivados. D-5 a D-11 estão detalhados em [[10-domain-rules-decisions]].
 
 ## Eventos externos e outbox
 

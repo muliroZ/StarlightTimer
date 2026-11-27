@@ -17,7 +17,7 @@
 3. [Estado atual do repositório](#3--estado-atual-do-reposit%C3%B3rio)
 4. [Stack e decisões técnicas](#4--stack-e-decis%C3%B5es-t%C3%A9cnicas)
 5. [Arquitetura macro](#5--arquitetura-macro)
-6. [Arquitetura hexagonal no backend](#6--arquitetura-hexagonal-no-backend)
+6. [Organização modular do backend](#6--organização-modular-do-backend)
 7. [Modelo de dados](#7--modelo-de-dados)
 8. [Regras de domínio que o código precisa respeitar](#8--regras-de-dom%C3%ADnio-que-o-c%C3%B3digo-precisa-respeitar)
 9. [Fluxo de trabalho: branches, commits, issues e PRs](#9--fluxo-de-trabalho-branches-commits-issues-e-prs)
@@ -53,9 +53,9 @@ Os documentos foram escritos em momentos diferentes e **discordam entre si** em 
 |Prioridade|Fonte|Manda em|
 |---|---|---|
 |**Máxima**|[Diagrama ER](<Modelo ER - StarlightTimer(4).png>)|Tabelas, colunas, tipos, nulidade, relacionamentos, constraints|
-|**Máxima**|Diagrama de [[Macro-arquitetura]]|Topologia: nginx, API, Redis, Kafka, workers, estilo hexagonal + event-driven|
+|**Máxima**|Diagrama de [[Macro-arquitetura]]|Topologia: nginx, API, Redis, Kafka, workers, eventos internos e Kafka para workers|
 |2|Código, migrations Flyway e `pom.xml`|Stack, versões, pacote base, **valores de enum** e tudo que os diagramas não especificam|
-|3|**Este documento**|Organização hexagonal, convenções de código, regras de IA, backlog|
+|3|**Este documento**|Organização modular, convenções de código, regras de IA, backlog|
 |3|[[10-domain-rules-decisions]]|Decisões específicas D-1 a D-11; prevalece sobre trechos anteriores deste contexto quando tratar desses IDs|
 |4|`docs/08-entity-inventory.md`|Racional de escopo das entidades|
 |5|Notas 01 a 09|Produto, modelo, design system, processo e planejamento|
@@ -132,7 +132,7 @@ TypeScript + React, Vite como build (recomendação de **F-1**). Design tokens, 
 
 ## 5 — Arquitetura macro
 
-Estilo declarado no diagrama de macro-arquitetura (fonte máxima): **Hexagonal + Event-Driven.**
+A [[Macro-arquitetura]] descreve a topologia. A API é modular e usa eventos internos. Kafka e outbox integram os workers na topologia planejada.
 
 ```mermaid
 graph LR
@@ -143,7 +143,7 @@ graph LR
     NGINX["nginx<br/><i>proxy reverso</i>"]
 
     subgraph API["Backend / API — Java + Spring"]
-        CORE["Regras de negócio<br/>StarlightTimer<br/><i>(núcleo hexagonal)</i>"]
+        CORE["Regras de negócio<br/>StarlightTimer<br/><i>(domínios Java em core)</i>"]
     end
 
     REDIS[("Redis<br/><i>cache-aside</i>")]
@@ -228,93 +228,59 @@ A tabela de outbox está no [ER atualizado](Modelo%20ER%20-%20StarlightTimer%288
 
 ---
 
-## 6 — Arquitetura hexagonal no backend
-
-**Decisão de organização (05/11/2026):** camadas e módulos em inglês, com a camada antes do módulo: `domain/progression`, `domain/session`, `app/session` e `adapters/session`. Nomes de domínio, métodos e campos de negócio permanecem em português; sufixos de papel das classes usam inglês. Esta decisão substitui a organização anterior com módulos em português na raiz.
+## 6 — Organização modular do backend
 
 ### Arquitetura e dependências
 
-O backend usa arquitetura hexagonal por módulo de feature, com eventos internos entre módulos e Kafka via transactional outbox para consumidores externos.
+Os cinco módulos do backend ficam em `core`. O domínio de cada módulo é escrito em Java puro e usa tipos como os enums, records puros e exceções do projeto. Invariantes e transições de estado ficam no domínio. Os serviços coordenam os casos de uso e delimitam suas transações com Spring.
 
-O fluxo de dependência aponta para o núcleo:
-
-`adapters → app → domain`
-
-- `domain` contém modelos, invariantes, eventos e exceções, usando apenas Java e tipos do próprio domínio. Não importa Spring, JPA, Redis ou Kafka.
-- `app` contém portas e serviços que orquestram os casos de uso. Depende do domínio e das próprias portas. Serviços podem usar `@Service` e `@Transactional`; outros imports do Spring ficam fora dessa camada.
-- `adapters` implementa as portas de saída e traduz entradas externas para chamadas às portas de entrada.
-- `shared`, dentro de cada camada, contém tipos transversais e não importa módulos de feature. Beans e configurações transversais ficam em `config`.
-
-Um módulo acessa outro apenas por sua porta de entrada pública ou por evento de domínio interno. Não importa modelos, entidades JPA, repositórios ou serviços internos de outro módulo.
+Controllers chamam os serviços diretamente. As chamadas entre módulos usam operações públicas, como a verificação de posse de uma sessão, ou eventos internos. O pacote de persistência de cada módulo reúne entidades JPA, mapeadores e repositórios Spring Data ou JDBC. Os repositórios podem compor operações customizadas quando precisam acessar várias tabelas.
 
 ### Organização dos pacotes
 
-O pacote base é `dev.amigoes.starlighttimer`. Os módulos do MVP são `identity`, `session`, `annotation`, `progression` e `social`. Tipos transversais ficam em `shared` dentro da camada correspondente; configurações transversais ficam em `config`.
-
-Cada camada é dividida por módulo. Dentro do módulo, use as subpastas em inglês correspondentes ao papel da classe:
-
 ```text
 dev.amigoes.starlighttimer/
-├── domain/
-│   ├── identity/
-│   ├── session/
-│   │   ├── entities/
-│   │   ├── enums/
-│   │   ├── events/
-│   │   └── exceptions/
+├── core/
 │   ├── annotation/
+│   │   ├── domain/
+│   │   ├── persistence/
+│   │   └── GerenciarAnotacoesService.java
+│   ├── identity/
+│   │   ├── currentuser/
+│   │   ├── domain/
+│   │   ├── persistence/
+│   │   └── usecase/
 │   ├── progression/
-│   │   ├── entities/
-│   │   └── services/
-│   ├── social/
-│   └── shared/
-│       └── exceptions/
-├── app/
 │   ├── session/
-│   │   ├── dto/
-│   │   ├── ports/
-│   │   │   ├── in/
-│   │   │   └── out/
-│   │   └── usecases/
-│   ├── progression/
-│   └── shared/
-│       └── ports/out/
-├── adapters/
-│   ├── session/
-│   │   ├── in/web/
-│   │   └── out/persistence/
-│   ├── progression/
-│   └── shared/
-│       └── out/events/
+│   │   ├── domain/
+│   │   ├── persistence/
+│   │   └── usecase/
+│   └── social/
+├── controller/
+├── events/
+├── exceptions/
+├── enums/
+├── records/
 ├── config/
 └── StarlighttimerApplication.java
 ```
 
-Pacotes, pastas de camada e módulos usam inglês. Nomes de domínio, métodos, campos e mensagens de exceção usam português; sufixos que indicam o papel da classe usam inglês (Service, Controller, Repository, Mapper, Adapter, Entity, Request, Response, UseCase, Command, Port e Exception). Identificadores não têm acentos nem `ç`. Constantes de enum copiam exatamente os valores das migrations; nomes impostos por frameworks e o ponto de entrada gerado permanecem como estão.
+Os pacotes usam nomes em inglês. Modelos, métodos, campos e mensagens usam português. Identificadores evitam acentos e cedilha. Constantes persistidas em enums seguem os valores definidos nas migrations.
 
-| Papel | Exemplo |
-| --- | --- |
-| Modelo e evento | `Sessao`, `SessaoConcluida` |
-| Porta de entrada e comando | `IniciarSessaoUseCase`, `IniciarSessaoCommand` |
-| Serviço de aplicação | `IniciarSessaoService` |
-| Porta de saída | `SalvarSessaoPort` |
-| Persistência | `SessaoEntity`, `SessaoJpaRepository`, `SessaoMapper`, `SessaoPersistenceAdapter` |
-| Web | `SessaoController`, `IniciarSessaoRequest`, `SessaoResponse` |
-| Exceção | `DuracaoInvalidaException` |
-
-A árvore mostra a convenção para os módulos do MVP; diretórios sem implementação não precisam de classes artificiais. `PublicadorEventosPort` fica em `app/shared/ports/out`, e seu adaptador Spring em `adapters/shared/out/events`. `SessaoConcluida` é o contrato público em `domain/session/events`; a progressão reconhece foco por `ehFoco()`, sem importar `domain/session/enums`.
+- `core/<module>/domain` contém modelos, regras e exceções específicas do módulo. O serviço pode ficar na raiz do módulo quando há um único caso de uso.
+- `core/<module>/persistence` reúne entidades, mapeadores e repositórios. Por exemplo, `SessaoRepository` oferece operações sobre sessões e seus registros de evento.
+- `core/identity/currentuser` reúne `UsuarioAtualPort` e suas duas implementações selecionadas por perfil.
+- `controller` contém controllers e handlers HTTP. Comandos e DTOs ficam em `records/<module>`. Os enums também são agrupados por módulo.
+- `events` reúne os eventos de aplicação, seus tipos auxiliares e listeners. `SessaoConcluida` dispara a concessão de XP. `SessaoEvento` faz parte do histórico do timer e fica em `core/session/domain`.
+- `exceptions` contém as exceções comuns. `config` reúne as configurações transversais.
 
 ### Implementar um caso de uso
 
-1. Modele as invariantes e transições em `domain/<module>`. Injete `Clock` para leituras de tempo; não use `Instant.now()` ou `LocalDate.now()` sem relógio.
-2. Defina a porta de entrada e o comando em `app/<module>/ports/in`; declare as necessidades externas em `app/<module>/ports/out`.
-3. Implemente a orquestração em `app/<module>/usecases`, com dependências recebidas pelo construtor e a transação necessária ao fluxo.
-4. Implemente as portas de saída em `adapters/<module>/out`. Entidades JPA são separadas dos modelos de domínio, convertidas por mapeadores e declaram `@Table(name = ...)` explicitamente.
-5. Implemente o controlador em `adapters/<module>/in/web`, dependendo da porta de entrada. Receba e devolva DTOs próprios (`record`), com Bean Validation para formato e obrigatoriedade.
-6. Traduza exceções de domínio para `ProblemDetail` (RFC 9457) em `adapters/shared/in/web`. Invariantes de negócio permanecem no domínio.
-7. Registre a verificação realizada e os resultados no PR, seguindo a política de testes da §10.1.
-
-Evite interfaces especulativas, mediadores genéricos, CQRS e event sourcing completo. Um catálogo somente leitura pode ter uma única porta de leitura.
+1. Modele as regras em `core/<module>/domain` e injete `Clock` nos serviços que precisam consultar a hora.
+2. Implemente a operação no serviço, com as dependências no construtor e a transação adequada ao fluxo.
+3. Agrupe operações de banco relacionadas no mesmo repositório. Use uma implementação customizada do Spring Data para operações que precisam de lógica de persistência própria. Declare `@Table(name = ...)` nas entidades JPA e use mapeadores para converter entre entidade e domínio.
+4. No controller, injete o serviço e use Bean Validation para formato e obrigatoriedade dos dados de entrada. Os handlers em `controller` traduzem exceções para `ProblemDetail` (RFC 9457).
+5. Registre a verificação realizada e os resultados no PR, seguindo a política de testes da §10.1.
 
 #### Persistência, cache e eventos
 
@@ -322,17 +288,17 @@ Evite interfaces especulativas, mediadores genéricos, CQRS e event sourcing com
 - PostgreSQL é a fonte da verdade. Redis usa cache-aside; escritas invalidam o cache e falha de cache é tratada como miss. A validação de conclusão de sessão lê estado autoritativo do banco.
 - A progressão reage a eventos internos de conclusão, com XP consistente na mesma transação da sessão. O ledger `ganho_xp` é append-only e `perfil.xp_total` é seu cache transacional.
 - Eventos externos são gravados no outbox na transação de negócio e publicados depois no Kafka. Consumidores precisam ser idempotentes. A tabela de outbox deve estar no ER antes da migration (BL-12).
-- O aceite de amizade atualiza o status do pedido; o trigger cria a amizade e exclui o pedido. O adaptador conhece esse comportamento, faz flush e carrega a amizade para a resposta.
+- O aceite de amizade atualiza o status do pedido; o trigger cria a amizade e exclui o pedido. O repositório faz flush, e o caso de uso carrega a amizade para a resposta.
 
 ### Outras convenções
 
 |Tópico|Convenção|
 |---|---|
 |Modelos imutáveis|`record` quando não houver ciclo de vida; classe com métodos de transição (`sessao.concluir(agora, tolerancia)`) quando houver|
-|Lombok|Permitido em adaptadores e DTOs. Em entidades JPA, **não use `@Data` nem `@EqualsAndHashCode`/`@ToString` gerados sobre relacionamentos**. `@Getter`, `@Setter` e `@NoArgsConstructor(access = PROTECTED)` bastam|
+|Lombok|Permitido na integração com frameworks e em DTOs. Em entidades JPA, **não use `@Data` nem `@EqualsAndHashCode`/`@ToString` gerados sobre relacionamentos**. `@Getter`, `@Setter` e `@NoArgsConstructor(access = PROTECTED)` bastam|
 |Tempo|Injete `java.time.Clock`. **Nunca** chame `Instant.now()`/`LocalDate.now()` sem `Clock`|
 |IDs|`UUID` em todas as PKs (ER)|
-|Erros|Exceções de domínio no núcleo; tradução para `ProblemDetail` (RFC 9457) em `adapters/shared/in/web`|
+|Erros|Exceções de domínio no núcleo; tradução para `ProblemDetail` (RFC 9457) em `controller`|
 |Validação|Formato e obrigatoriedade nos DTOs (Bean Validation); invariantes de negócio no domínio|
 |Datas|`Instant`/`OffsetDateTime` para `TIMESTAMPTZ`; `LocalDate` para `DATE`|
 
@@ -410,7 +376,7 @@ O aceite de um pedido é feito **por trigger no banco**: quando `pedido_amizade.
 Como isso convive com o hexágono:
 
 - O serviço `AceitarPedidoAmizadeService` valida as regras (o usuário é o destinatário, o pedido está pendente, não há bloqueio) e **só atualiza o status**. Ele **não** insere em `amizade` — isso duplicaria o trigger.
-- O adaptador de persistência é quem sabe do trigger. Documente isso no Javadoc da porta de saída e no próprio adaptador.
+- Documente o trigger na operação do repositório que altera o status do pedido.
 - Depois do `UPDATE`, a linha do pedido **não existe mais**. Não releia o pedido nem confie na entidade JPA gerenciada: faça `flush()`, limpe o contexto se necessário e carregue a `amizade` recém-criada para montar a resposta.
 - O trigger precisa gravar o par em **ordem canônica** (`LEAST`/`GREATEST` dos dois UUIDs) para que as constraints de `amizade` funcionem.
 - O trigger vive numa migration, com comentário explicando o comportamento. Qualquer mudança nele é uma migration nova.
@@ -628,65 +594,24 @@ Abra o PR para `dev`, preencha o template e confira o comentário do bot de gove
 
 ### 11.5 — Implementar um caso de uso de ponta a ponta
 
-Exemplo: **iniciar uma sessão** (módulo `sessao`).
+Exemplo real do módulo `session`. O `controller/SessaoController.java` valida o `IniciarSessaoRequest` de `records/session` e chama `core/session/usecase/GerenciarSessaoService.java`. O serviço consulta o perfil e as configurações pelos serviços públicos de `identity`. `TransicoesSessaoService` usa o `Clock` para criar a sessão do domínio e seu registro de início.
 
-**1. Domínio** — `domain/session/entities/Sessao.java`. Sem anotações de framework. Contém as invariantes e transições.
+Na mesma transação, `core/session/persistence/SessaoRepository.java` grava a sessão e o evento por `salvarComEvento`. `SessaoMapper` converte os tipos Java puros em entidades JPA. O controller devolve `SessaoResponse`.
 
-```java
-public final class Sessao {
-    private final UUID id;
-    private final UUID usuarioId;
-    private final TipoSessao tipo;          // constantes = valores da migration
-    private StatusSessao status;            // constantes = valores da migration
-    private final int duracaoPlanejada;
-    private final Instant iniciadoEm;
-    private final LocalDate diaLocal;
-
-    public static Sessao iniciar(UUID id, UUID usuarioId, TipoSessao tipo,
-                                 int duracaoPlanejada, Clock relogio, ZoneId fusoUsuario) {
-        tipo.validarDuracao(duracaoPlanejada);          // mesma regra dos CHECKs
-        Instant agora = relogio.instant();
-        return new Sessao(id, usuarioId, tipo, StatusSessao.valorInicial(),
-                          duracaoPlanejada, agora, LocalDate.ofInstant(agora, fusoUsuario));
-    }
-    // concluir(...), pausar(...), retomar(...), abandonar(...)
-}
-```
-
-**2. Porta de entrada** — `app/session/ports/in/IniciarSessaoUseCase.java`.
-
-```java
-public interface IniciarSessaoUseCase {
-    SessaoIniciada iniciar(IniciarSessaoCommand comando);
-}
-```
-
-**3. Portas de saída** — o que o caso de uso precisa: salvar a sessão, registrar o evento e descobrir o fuso do usuário. O fuso vem do módulo `identidade`, então a porta de saída do `sessao` é implementada por um adaptador que chama a **porta de entrada** pública do `identidade` — nunca o repositório dele.
-
-**4. Serviço** — `app/session/usecases/IniciarSessaoService.java`: `@Service`, `@Transactional`, recebe portas e `Clock` pelo construtor, cria o modelo, salva, registra o `sessao_evento` de início (com `ocorrido_em` do servidor e `reportado_em` do cliente) e devolve id, `iniciadoEm` e horário do servidor.
-
-**5. Adaptador de saída** — `adapters/session/out/persistence/`: `SessaoEntity` (`@Table(name = "sessao")`), `SessaoJpaRepository`, `SessaoMapper` e `SessaoPersistenceAdapter`, que implementa a porta.
-
-**6. Adaptador de entrada** — `adapters/session/in/web/SessaoController.java` com `record IniciarSessaoRequest` validado por Bean Validation e `record SessaoResponse`. O controlador só traduz HTTP ↔ comando; nenhuma regra mora nele.
-
-**7. Verificação manual** (vai para "Como foi testado" no PR):
+Com a API no perfil `local`, verifique com:
 
 ```bash
-curl -X POST http://localhost:8080/sessoes \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"tipo":"<valor de tipo da migration>","duracaoPlanejada":1500,"reportadoEm":"2026-11-04T13:00:00Z"}'
-# esperado: 201 com id, iniciadoEm e horário do servidor
-# no banco: SELECT status, dia_local FROM sessao WHERE id = '<id>';
-#           SELECT tipo_evento, ocorrido_em, reportado_em FROM sessao_evento WHERE sessao_id = '<id>';
-# caso inválido: duracaoPlanejada=1000 → 400 em formato problem-detail
+curl -i -X POST http://localhost:8081/api/v1/sessoes \
+  -H 'Content-Type: application/json' \
+  -d '{"tipo":"FOCUS","duracaoPlanejada":1500}'
 ```
 
-(Caminhos e nomes de campos JSON são ilustrativos até existir o documento de convenções de API — **BL-17**.)
+A resposta esperada é `201` com o ID, `iniciadoEm` e `horarioServidor`. No banco, confira a sessão em `sessao` e o registro `INICIADA` em `sessao_evento`.
 
 ### 11.6 — Publicar um evento
 
-- **Interno** (outro módulo da API reage): defina o evento como `record` em `domain/<module>/events`, publique por uma porta de saída cujo adaptador usa `ApplicationEventPublisher`, e escute no outro módulo com `@TransactionalEventListener`.
-- **Externo** (worker reage): o serviço chama uma porta de saída (ex.: `PublicarEventoPort`) cujo adaptador **grava no outbox** dentro da transação corrente. O publicador agendado em `adapters/shared/out/outbox` leva ao Kafka. O adaptador grava o envelope completo com um DTO próprio no campo `payload`. O publicador envia o JSON persistido para `starlight.<agregado-no-plural>`, com a versão em `metadata.versao_payload`. O contrato e o primeiro lote estão em [Mapeamento de Eventos](11-event-mapping.md) (#69).
+- **Interno**. Coloque o tipo do evento e seu listener em `events`. O serviço publica com `ApplicationEventPublisher`. No fluxo de conclusão, `SessaoConcluidaListener` usa `@EventListener` síncrono para conceder XP na mesma transação e devolver a recompensa na resposta HTTP.
+- **Externo**. Grave o envelope JSON no outbox dentro da transação de negócio. O publicador agendado envia o JSON persistido ao Kafka conforme o [Mapeamento de Eventos](11-event-mapping.md) (#69).
 - **Consumidores** (workers) deduplicam pelo ID do evento, porque a entrega é at-least-once.
 
 ---
@@ -697,10 +622,10 @@ Registradas para que ninguém (pessoa ou IA) siga a fonte desatualizada por enga
 
 |#|Tema|Docs antigos dizem|O que vale|
 |---|---|---|---|
-|1|Estilo de arquitetura|Doc 02: monólito modular, sem broker|Diagrama macro: hexagonal + event-driven, Kafka via outbox, workers. Eventos entre módulos continuam in-process|
+|1|Estilo de arquitetura|Doc 02: monólito modular, sem broker|API modular, eventos internos síncronos e integração planejada com workers via outbox e Kafka|
 |2|Redis|Doc 02 e **T-13**: opcional, adiar|Faz parte da stack como cache-aside não essencial|
 |3|Pacote base|Doc 02: `com.starlighttimer`|`dev.amigoes.starlighttimer`|
-|4|Estrutura do módulo|Doc 02: `api/`, `domain/`, `persistence/` + `Facade`|Camadas em inglês com módulos dentro delas (§6), como `domain/session`; a "facade" virou porta de entrada|
+|4|Estrutura do módulo|Doc 02: `api/`, `domain/`, `persistence/` + `Facade`|Módulos em `core`, com domínio, persistência e serviços de caso de uso (§6)|
 |5|Idioma do código|Doc 01: termos em inglês no código|**Pacotes em inglês; classes, métodos e campos em português**; constantes de enum seguem a migration; termos temáticos ficam na interface|
 |6|Nomes dos módulos|Doc 02: `identity`, `timer`, `progression`...|`identity`, `session`, `annotation`, `progression`, `social` (§6)|
 |7|Escopos de commit|Doc 06: nomes em inglês|Escopos de commit em português (§9), a confirmar em ABERTO-11|

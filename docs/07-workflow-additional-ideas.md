@@ -1,6 +1,6 @@
 # 07 — Ideias Adicionais de Workflow & Gestão (Opcional)
 
-Ideias opcionais de processo. As regras vigentes de branches, PRs, idioma do código e testes estão em [Contexo](Contexo.md) §9–10 e [06-git-workflow](06-git-workflow.md); esta nota não as substitui. A API segue hexagonal por feature e há workers externos na topologia.
+Ideias opcionais de processo. As regras vigentes de branches, PRs, idioma do código e testes estão em [Contexo](Contexo.md) §9–10 e [06-git-workflow](06-git-workflow.md); esta nota não as substitui. A API organiza as funcionalidades em módulos dentro de `core` e há workers externos na topologia.
 
 ---
 

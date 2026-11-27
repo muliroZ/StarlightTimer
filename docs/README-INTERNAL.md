@@ -29,4 +29,4 @@
 
 ## Convenções
 
-A interface usa *star*, *ignite*, *orbit* e outros termos temáticos. Nomes de domínio, métodos, campos e schema usam português; sufixos de papel das classes, pacotes, módulos e pastas usam inglês (`domain/session`, `domain/progression`), conforme [Contexo](Contexo.md) §6–7; os valores de enum copiam as migrations. Mudanças de schema começam no ER. A política Q-4 de testes está em [Contexo](Contexo.md) §10.1.
+A interface usa *star*, *ignite*, *orbit* e outros termos temáticos. Nomes de domínio, métodos, campos e schema usam português; sufixos de papel das classes, pacotes, módulos e pastas usam inglês (`core/session`, `core/progression`), conforme [Contexo](Contexo.md) §6–7; os valores de enum copiam as migrations. Mudanças de schema começam no ER. A política Q-4 de testes está em [Contexo](Contexo.md) §10.1.

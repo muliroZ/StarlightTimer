@@ -23,7 +23,7 @@ A micro-arquitetura trata principalmente de aspectos de baixo nível, como a org
 ---
 ## Estrutura do Projeto
 
-A organização vigente mantém as camadas em inglês na raiz do pacote base (`domain`, `app`, `adapters`, `config`) e separa os módulos dentro de cada camada: `domain/progression`, `domain/session`, `app/session`, `adapters/session`. Os módulos do MVP são `identity`, `session`, `annotation`, `progression` e `social`; itens transversais usam `shared` dentro da camada correspondente. Dentro dos módulos, subpastas também usam inglês (`entities`, `events`, `enums`, `exceptions`, `services`, `ports/in`, `ports/out`, `usecases`). Nomes de domínio, métodos e campos permanecem em português; sufixos de papel das classes usam inglês (Service, Controller, Repository, Mapper, Adapter, Entity, Request, Response, UseCase, Command, Port e Exception); enums seguem as migrations. Ver [Contexo](Contexo.md) §6 e [02-architecture](02-architecture.md).
+Os módulos `identity`, `session`, `annotation`, `progression` e `social` ficam em `core`. Cada módulo reúne domínio Java puro, persistência Spring e serviços de caso de uso. Controllers, eventos, exceções comuns, enums e records têm pacotes centrais. Ver [[Contexo]] §6 e [[02-architecture]].
 
 ## Padrões de Projeto
 Abaixo estão listados e explicados os padrões de projeto que utilizaremos na nossa aplicação:

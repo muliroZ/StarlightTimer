@@ -76,7 +76,7 @@ São assíncronos e mais simples que a API em si ^E5eHLYGC
 
 StarlightTimer ^9sbiyTRu
 
-Hexagonal + Event-Driven ^37D5hgm2
+API modular com eventos internos e mensageria externa ^37D5hgm2
 
 %%
 ## Drawing
