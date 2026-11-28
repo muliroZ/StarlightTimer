@@ -49,10 +49,19 @@ public class Sessao {
         this.tempoDePausa = 0;
     }
 
-    public Sessao(UUID id, UUID usuarioId, TipoSessao tipo, StatusSessao status,
-                  int duracaoPlanejada, int tempoDeFoco, int tempoDePausa,
-                  Date diaLocal, OffsetDateTime iniciadoEm, OffsetDateTime terminadoEm,
-                  OffsetDateTime pausaIniciadaEm) {
+    public Sessao(
+            UUID id,
+            UUID usuarioId,
+            TipoSessao tipo,
+            StatusSessao status,
+            int duracaoPlanejada,
+            int tempoDeFoco,
+            int tempoDePausa,
+            Date diaLocal,
+            OffsetDateTime iniciadoEm,
+            OffsetDateTime terminadoEm,
+            OffsetDateTime pausaIniciadaEm
+    ) {
         this.id = Objects.requireNonNull(id, "id e obrigatorio");
         this.usuarioId = Objects.requireNonNull(usuarioId, "usuarioId e obrigatorio");
         this.tipo = Objects.requireNonNull(tipo, "tipo e obrigatorio");

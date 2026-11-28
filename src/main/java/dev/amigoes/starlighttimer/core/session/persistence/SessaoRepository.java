@@ -5,7 +5,9 @@ import dev.amigoes.starlighttimer.core.session.domain.SessaoEvento;
 import dev.amigoes.starlighttimer.enums.session.StatusSessao;
 import dev.amigoes.starlighttimer.enums.session.TipoEvento;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -24,6 +26,10 @@ public interface SessaoRepository extends JpaRepository<SessaoEntity, UUID>, Eve
 
   Optional<SessaoEntity> findByIdAndUsuarioId(UUID id, UUID usuarioId);
 
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("SELECT s FROM SessaoEntity s WHERE s.id = :id AND s.usuarioId = :usuarioId")
+  Optional<SessaoEntity> findParaAtualizarPorIdEUsuario(@Param("id") UUID id, @Param("usuarioId") UUID usuarioId);
+
   Optional<SessaoEntity> findFirstByUsuarioIdAndStatusIn(UUID usuarioId, Collection<StatusSessao> statuses);
 
   @Query(value = "SELECT * FROM sessao WHERE usuario_id = :usuarioId " +
@@ -36,13 +42,23 @@ public interface SessaoRepository extends JpaRepository<SessaoEntity, UUID>, Eve
       "AND (CAST(:dataInicio AS date) IS NULL OR dia_local >= CAST(:dataInicio AS date)) " +
       "AND (CAST(:dataFim AS date) IS NULL OR dia_local <= CAST(:dataFim AS date)) " +
       "ORDER BY iniciado_em DESC, id DESC LIMIT :limit OFFSET :offset", nativeQuery = true)
-  List<SessaoEntity> findHistoricoFiltrado(@Param("usuarioId") UUID usuarioId,
-                                           @Param("dataInicio") LocalDate dataInicio,
-                                           @Param("dataFim") LocalDate dataFim,
-                                           @Param("limit") int limit,
-                                           @Param("offset") int offset);
+  List<SessaoEntity> findHistoricoFiltrado(
+          @Param("usuarioId") UUID usuarioId,
+          @Param("dataInicio") LocalDate dataInicio,
+          @Param("dataFim") LocalDate dataFim,
+          @Param("limit") int limit,
+          @Param("offset") int offset
+  );
 
-  List<SessaoEntity> findByStatusIn(Collection<StatusSessao> statuses);
+  @Query("SELECT s.id FROM SessaoEntity s WHERE s.status IN (:statuses) ORDER BY s.id")
+  List<UUID> findIdsPorStatus(@Param("statuses") Collection<StatusSessao> statuses);
+
+  @Lock(LockModeType.PESSIMISTIC_WRITE)
+  @Query("SELECT s FROM SessaoEntity s WHERE s.id = :id AND s.status IN (:statuses)")
+  Optional<SessaoEntity> findParaAtualizarPorIdEStatus(
+          @Param("id") UUID id,
+          @Param("statuses") Collection<StatusSessao> statuses
+  );
 
   @Query("SELECT DISTINCT s.diaLocal FROM SessaoEntity s " +
       "WHERE s.usuarioId = :usuarioId " +
@@ -50,9 +66,11 @@ public interface SessaoRepository extends JpaRepository<SessaoEntity, UUID>, Eve
       "AND s.status = dev.amigoes.starlighttimer.enums.session.StatusSessao.COMPLETED " +
       "AND s.diaLocal BETWEEN :dataInicio AND :dataFim " +
       "ORDER BY s.diaLocal ASC")
-  List<LocalDate> listarDiasComFocoConcluido(@Param("usuarioId") UUID usuarioId,
-                                           @Param("dataInicio") LocalDate dataInicio,
-                                           @Param("dataFim") LocalDate dataFim);
+  List<LocalDate> listarDiasComFocoConcluido(
+          @Param("usuarioId") UUID usuarioId,
+          @Param("dataInicio") LocalDate dataInicio,
+          @Param("dataFim") LocalDate dataFim
+  );
 
   @Transactional
   default Sessao salvarComEvento(Sessao sessao, SessaoEvento evento) {
@@ -73,6 +91,10 @@ public interface SessaoRepository extends JpaRepository<SessaoEntity, UUID>, Eve
   default Optional<Sessao> buscarPorIdEUsuario(UUID id, UUID usuarioId) {
     return findByIdAndUsuarioId(id, usuarioId)
         .map(this::reconstituirSessao);
+  }
+
+  default Optional<Sessao> buscarPorIdEUsuarioParaAtualizar(UUID id, UUID usuarioId) {
+    return findParaAtualizarPorIdEUsuario(id, usuarioId).map(this::reconstituirSessao);
   }
 
   default Optional<Sessao> buscarAtivaPorUsuario(UUID usuarioId) {
@@ -103,9 +125,13 @@ public interface SessaoRepository extends JpaRepository<SessaoEntity, UUID>, Eve
         .stream().map(this::reconstituirSessao).toList();
   }
 
-  default List<Sessao> listarAtivas() {
-    return findByStatusIn(Set.of(StatusSessao.RUNNING, StatusSessao.PAUSED))
-        .stream().map(this::reconstituirSessao).toList();
+  default List<UUID> listarIdsAtivos() {
+    return findIdsPorStatus(Set.of(StatusSessao.RUNNING, StatusSessao.PAUSED));
+  }
+
+  default Optional<Sessao> buscarAtivaParaAtualizar(UUID id) {
+    return findParaAtualizarPorIdEStatus(id, Set.of(StatusSessao.RUNNING, StatusSessao.PAUSED))
+        .map(this::reconstituirSessao);
   }
 
   private Sessao reconstituirSessao(SessaoEntity entity) {
