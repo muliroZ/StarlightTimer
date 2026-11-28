@@ -11,11 +11,18 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.web.DefaultBearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -23,13 +30,20 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableWebSecurity
 public class SegurancaConfig {
 
-    private static final String[] ROTAS_PUBLICAS_AUTENTICACAO = {
-            "/api/v1/auth/cadastro", "/api/v1/auth/login", "/api/v1/auth/refresh"
-    };
+    private static final RequestMatcher ROTAS_PUBLICAS_AUTENTICACAO = new OrRequestMatcher(
+            Stream.of("/api/v1/auth/cadastro", "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout")
+                    .map(rota -> PathPatternRequestMatcher.pathPattern(HttpMethod.POST, rota))
+                    .toList());
+
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     @Profile("!local")
     SecurityFilterChain segurancaJwt(HttpSecurity http, ProblemDetailAuthenticationEntryPoint entrada) {
+        var resolver = new DefaultBearerTokenResolver();
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sessao -> sessao.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -39,12 +53,16 @@ public class SegurancaConfig {
                 .cors(withDefaults())
                 .authorizeHttpRequests(rotas -> rotas
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, ROTAS_PUBLICAS_AUTENTICACAO).permitAll()
+                        .requestMatchers(ROTAS_PUBLICAS_AUTENTICACAO).permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health", "/actuator/health/**").permitAll()
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**", "/error").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(excecoes -> excecoes.authenticationEntryPoint(entrada))
-                .oauth2ResourceServer(jwt -> jwt.jwt(withDefaults()).authenticationEntryPoint(entrada))
+                .oauth2ResourceServer(jwt -> jwt
+                        .bearerTokenResolver(request -> ROTAS_PUBLICAS_AUTENTICACAO.matches(request)
+                                ? null : resolver.resolve(request))
+                        .jwt(withDefaults())
+                        .authenticationEntryPoint(entrada))
                 .build();
     }
 
