@@ -1,5 +1,6 @@
 package dev.amigoes.starlighttimer.core.progression.usecase;
 
+import dev.amigoes.starlighttimer.core.interfaces.GravadorEventos;
 import dev.amigoes.starlighttimer.core.progression.domain.CalculadoraXp;
 import dev.amigoes.starlighttimer.core.progression.domain.CurvaDeNiveis;
 import dev.amigoes.starlighttimer.core.progression.domain.ProgressoInsignia;
@@ -9,6 +10,11 @@ import dev.amigoes.starlighttimer.core.progression.persistence.GanhoXpRepository
 import dev.amigoes.starlighttimer.core.progression.persistence.InsigniaUsuarioRepository;
 import dev.amigoes.starlighttimer.core.progression.persistence.ProgressaoRepository;
 import dev.amigoes.starlighttimer.events.SessaoConcluida;
+import dev.amigoes.starlighttimer.events.kafka.EventoEnvelope;
+import dev.amigoes.starlighttimer.events.kafka.EventoMetadata;
+import dev.amigoes.starlighttimer.events.kafka.TipoEvento;
+import dev.amigoes.starlighttimer.events.kafka.payloads.ConstelacaoDesbloqueadaPayloadV1;
+import dev.amigoes.starlighttimer.events.kafka.payloads.InsigniaDesbloqueadaPayloadV1;
 import dev.amigoes.starlighttimer.records.progression.Constelacao;
 import dev.amigoes.starlighttimer.records.progression.GanhoXp;
 import dev.amigoes.starlighttimer.records.progression.Insignia;
@@ -33,6 +39,7 @@ public class ConcederProgressaoService {
     private final GanhoXpRepository ledger;
     private final InsigniaUsuarioRepository progressos;
     private final ConstelacaoUsuarioRepository constelacoes;
+    private final GravadorEventos gravador;
     private final Clock relogio;
     private final CalculadoraXp calculadoraXp = new CalculadoraXp();
     private final CalculadoraMetricasInsignias metricas = new CalculadoraMetricasInsignias();
@@ -40,12 +47,13 @@ public class ConcederProgressaoService {
     public ConcederProgressaoService(ProgressaoRepository repositorio,
             CatalogoProgressaoRepository catalogo, GanhoXpRepository ledger,
             InsigniaUsuarioRepository progressos, ConstelacaoUsuarioRepository constelacoes,
-            Clock relogio) {
+            GravadorEventos gravador, Clock relogio) {
         this.repositorio = repositorio;
         this.catalogo = catalogo;
         this.ledger = ledger;
         this.progressos = progressos;
         this.constelacoes = constelacoes;
+        this.gravador = gravador;
         this.relogio = relogio;
     }
 
@@ -83,13 +91,20 @@ public class ConcederProgressaoService {
             boolean elegivel = melhor >= insignia.contagemAlvo();
             var desbloqueadoEm = desbloqueioAnterior != null ? desbloqueioAnterior
                     : elegivel ? relogio.instant() : null;
+            boolean novoDesbloqueio = desbloqueioAnterior == null && desbloqueadoEm != null;
             if (melhor > 0 || anterior.isPresent()) {
                 progressos.registrarProgresso(new ProgressoInsignia(
                         evento.usuarioId(), insignia.id(), melhor, desbloqueadoEm));
+                if (novoDesbloqueio) {
+                    gravador.gravar(new EventoEnvelope<>(
+                            EventoMetadata.gerar(TipoEvento.INSIGNIA_DESBLOQUEADA, evento.usuarioId(), relogio, 1),
+                            new InsigniaDesbloqueadaPayloadV1(insignia.id())
+                    ));
+                }
             }
             if (desbloqueadoEm != null) {
                 insigniasDesbloqueadas.add(insignia.id());
-                if (desbloqueioAnterior == null && ledger.registrarGanhoXp(ganho(
+                if (novoDesbloqueio && ledger.registrarGanhoXp(ganho(
                         evento.usuarioId(), calculadoraXp.calcularRecompensaInsignia(insignia.xpRecompensa()),
                         null, null, insignia.id(), agora))) {
                     xpGanho += insignia.xpRecompensa();
@@ -106,6 +121,10 @@ public class ConcederProgressaoService {
             if (estrelas >= constelacao.qtdEstrelas()
                     && qtdInsignias >= constelacao.qtdInsigniasRequeridas()
                     && constelacoes.registrarDesbloqueio(constelacao.id(), evento.usuarioId(), relogio.instant())) {
+                gravador.gravar(new EventoEnvelope<>(
+                        EventoMetadata.gerar(TipoEvento.CONSTELACAO_DESBLOQUEADA, evento.usuarioId(), relogio, 1),
+                        new ConstelacaoDesbloqueadaPayloadV1(constelacao.id())
+                ));
                 if (ledger.registrarGanhoXp(ganho(evento.usuarioId(),
                         calculadoraXp.calcularRecompensaConstelacao(constelacao.xpRecompensa()),
                         null, constelacao.id(), null, agora))) {

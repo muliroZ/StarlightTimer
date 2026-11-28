@@ -11,11 +11,13 @@ import dev.amigoes.starlighttimer.core.session.domain.SessaoAtivaExistenteExcept
 import dev.amigoes.starlighttimer.core.session.domain.SessaoEvento;
 import dev.amigoes.starlighttimer.core.session.persistence.SessaoRepository;
 import dev.amigoes.starlighttimer.enums.session.AcaoSessao;
+import dev.amigoes.starlighttimer.enums.session.MotivoAbandonoSessao;
 import dev.amigoes.starlighttimer.enums.session.TipoSessao;
 import dev.amigoes.starlighttimer.events.SessaoConcluida;
 import dev.amigoes.starlighttimer.events.kafka.EventoEnvelope;
 import dev.amigoes.starlighttimer.events.kafka.EventoMetadata;
 import dev.amigoes.starlighttimer.events.kafka.TipoEvento;
+import dev.amigoes.starlighttimer.events.kafka.payloads.SessaoAbandonadaPayloadV1;
 import dev.amigoes.starlighttimer.events.kafka.payloads.SessaoConcluidaPayloadV1;
 import dev.amigoes.starlighttimer.events.kafka.payloads.SessaoIniciadaPayloadV1;
 import dev.amigoes.starlighttimer.exceptions.RecursoNaoEncontradoException;
@@ -32,6 +34,8 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static dev.amigoes.starlighttimer.enums.session.TipoEvento.ABANDONADA;
 
 @Service
 public class GerenciarSessaoService {
@@ -117,6 +121,11 @@ public class GerenciarSessaoService {
         }
 
         sessoes.salvarComEvento(sessao, evento);
+        if (evento.tipoEvento() == ABANDONADA) {
+            registrarAbandono(sessao, acao == AcaoSessao.ABANDONAR
+                    ? MotivoAbandonoSessao.ABANDONO_USUARIO
+                    : MotivoAbandonoSessao.TETO_PAUSA_EXCEDIDO);
+        }
         if (acao != AcaoSessao.CONCLUIR) return new ResultadoTransicao(sessao, null);
 
         SessaoConcluida concluida = publicarConclusao(sessao);
@@ -146,5 +155,12 @@ public class GerenciarSessaoService {
                 new SessaoConcluidaPayloadV1(sessao.getUsuarioId(), sessao.getTipo(), sessao.getTempoDeFoco())
         ));
         return evento;
+    }
+
+    void registrarAbandono(Sessao sessao, MotivoAbandonoSessao motivo) {
+        gravador.gravar(new EventoEnvelope<>(
+                EventoMetadata.gerar(TipoEvento.SESSAO_ABANDONADA, sessao.getId(), clock, 1),
+                new SessaoAbandonadaPayloadV1(sessao.getUsuarioId(), sessao.getTipo(), motivo)
+        ));
     }
 }

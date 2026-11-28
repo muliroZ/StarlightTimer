@@ -4,6 +4,7 @@ import dev.amigoes.starlighttimer.core.session.domain.ConclusaoAntecipadaExcepti
 import dev.amigoes.starlighttimer.core.session.domain.Sessao;
 import dev.amigoes.starlighttimer.core.session.domain.SessaoEvento;
 import dev.amigoes.starlighttimer.core.session.persistence.SessaoRepository;
+import dev.amigoes.starlighttimer.enums.session.MotivoAbandonoSessao;
 import dev.amigoes.starlighttimer.enums.session.StatusSessao;
 
 import org.springframework.stereotype.Service;
@@ -42,6 +43,7 @@ public class EncerrarSessoesVencidasService {
                     && sessao.getTempoDePausa() + Duration.between(
                     sessao.getPausaIniciadaEm(), transicoes.horarioServidor()).getSeconds() > 600) {
                 sessoes.salvarComEvento(sessao, transicoes.abandonarPorAgendador(sessao, "Pausa excedida"));
+                gerenciar.registrarAbandono(sessao, MotivoAbandonoSessao.TETO_PAUSA_EXCEDIDO);
             } else if (sessao.getStatus() == StatusSessao.RUNNING
                     && Duration.between(sessao.getIniciadoEm(), transicoes.horarioServidor()).getSeconds()
                     - sessao.getTempoDePausa() >= sessao.getDuracaoPlanejada()) {
