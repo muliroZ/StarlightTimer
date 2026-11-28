@@ -69,10 +69,16 @@ Os pacotes usam nomes em inglês. Modelos, métodos, campos e mensagens usam por
 
 Pré-requisitos: Java 21, Docker, Docker Compose e Git. Use sempre o Maven Wrapper do repositório.
 
-Copie `.env.example` para `.env` e preencha as variáveis do ambiente. Não versione segredos.
+Copie `.env.example` para `.env`.
 
 ```bash
 cp .env.example .env
+openssl rand -base64 48
+```
+
+Antes de subir o Docker Compose ou iniciar a aplicação, preencha as variáveis em `.env`. Todos os perfis, inclusive `local`, exigem `JWT_SECRET` com pelo menos 32 bytes em UTF-8 e `JWT_VALIDITY_TIME` positivo. Use a saída do OpenSSL como valor de `JWT_SECRET` e mantenha `JWT_VALIDITY_TIME=3600000` para uma hora. Mantenha `.env` fora do versionamento.
+
+```bash
 docker compose up -d
 ./mvnw -DskipTests compile
 ./mvnw -DskipTests spring-boot:run
@@ -102,11 +108,23 @@ Priorize testes unitários para invariantes de domínio e testes de integração
 
 A CI verifica o build com `-DskipTests verify` durante a adoção inicial. A suíte passa a ser obrigatória quando sua execução na CI for reproduzível. Registre os testes executados e os passos manuais relevantes no PR.
 
+### Autenticação
+
+Fora do perfil `local`, envie `Authorization: Bearer <JWT>` nas chamadas protegidas. O token usa HS256, com o UUID de um usuário ativo em `sub` e expiração em `exp`. No Swagger, use **Authorize** para informar o token.
+
+A configuração de assinatura é obrigatória em todos os perfis, inclusive `local`.
+
+- `JWT_SECRET` é o segredo de assinatura, com pelo menos 32 bytes em UTF-8. Gere o valor com `openssl rand -base64 48`.
+- `JWT_VALIDITY_TIME` deve ser positivo. O valor `3600000` representa uma hora em milissegundos.
+- `CORS_ALLOWED_ORIGINS` aceita origens separadas por vírgula. O padrão de desenvolvimento é `http://localhost:5173`.
+
+Health e Swagger têm acesso público. A configuração também reserva `POST /api/v1/auth/cadastro`, `POST /api/v1/auth/login` e `POST /api/v1/auth/refresh` para os endpoints da issue #74. A emissão de tokens pela API chega nessa issue.
+
 ### Acesso local sem JWT
 
-Sem perfil ativo explícito, a API usa o perfil `local`. Nesse perfil, ela cria no startup um usuário padrão (`00000000-0000-0000-0000-000000000001`) com perfil e configurações. Os endpoints de negócio usam esse usuário sem exigir autenticação nem cabeçalhos.
+Sem perfil ativo explícito, a API usa o perfil `local`. Para iniciar nesse perfil, configure `JWT_SECRET` e `JWT_VALIDITY_TIME` em `.env` conforme os passos de setup. A API cria no startup um usuário padrão (`00000000-0000-0000-0000-000000000001`) com perfil e configurações. Os endpoints de negócio usam esse usuário sem exigir autenticação nem cabeçalhos.
 
-Para criar outro usuário local, chame `POST /api/v1/usuarios/local` com `email`, `nomeExibido` e `fusoHorario` IANA. A resposta `201` contém o `id`. Envie `X-Usuario-Id: <id>` nas chamadas seguintes para selecionar esse usuário. O cabeçalho é opcional e só funciona no perfil `local`; IDs inexistentes ou inativos recebem `404`. Fora desse perfil, o adaptador atual continua devolvendo `401` até a integração de JWT. Não use o perfil `local` em ambiente exposto a usuários externos.
+Para criar outro usuário local, chame `POST /api/v1/usuarios/local` com `email`, `nomeExibido` e `fusoHorario` IANA. A resposta `201` contém o `id`. Envie `X-Usuario-Id: <id>` nas chamadas seguintes para selecionar esse usuário. O cabeçalho é opcional e só funciona no perfil `local`; IDs inexistentes ou inativos recebem `404`. Não use o perfil `local` em ambiente exposto a usuários externos.
 
 ```bash
 curl -i http://localhost:8081/api/v1/me/perfil
@@ -177,7 +195,7 @@ Para verificar manualmente quando #31 estiver integrado: conclua um foco de 25 m
 
 `GET /api/v1/me/sessao-ativa` devolve 200 ou 204. `GET /api/v1/sessoes` aceita `pagina` a partir de zero, `tamanho` de 1 a 100 e filtros opcionais `dataInicio` e `dataFim` em ISO 8601, sobre `dia_local`. O resultado contém `itens`, `pagina`, `tamanho` e `proximaPagina`. O acesso a uma sessão de outro usuário devolve 404.
 
-A autenticação JWT ainda não está integrada. No perfil `local`, esses endpoints usam o usuário padrão ou o UUID selecionado pelo cabeçalho opcional. Para verificar manualmente, inicie uma sessão e confira `INICIADA` e `dia_local` no banco; repita o POST e confira 409 com o mesmo ID; pause, retome e confira `ocorrido_em` e `reportado_em` distintos; tente concluir cedo e confira 409 e `CONCLUSAO_REJEITADA`; conclua no tempo e compare a recompensa com `ganho_xp`; depois confira a recuperação, a paginação filtrada, o 404 para sessão alheia e o encerramento pelo job. A compilação local usa `sh ./mvnw -DskipTests compile` enquanto o wrapper não tiver permissão de execução.
+No perfil `local`, esses endpoints usam o usuário padrão ou o UUID selecionado pelo cabeçalho opcional. Para verificar manualmente, inicie uma sessão e confira `INICIADA` e `dia_local` no banco; repita o POST e confira 409 com o mesmo ID; pause, retome e confira `ocorrido_em` e `reportado_em` distintos; tente concluir cedo e confira 409 e `CONCLUSAO_REJEITADA`; conclua no tempo e compare a recompensa com `ganho_xp`; depois confira a recuperação, a paginação filtrada, o 404 para sessão alheia e o encerramento pelo job. A compilação local usa `sh ./mvnw -DskipTests compile` enquanto o wrapper não tiver permissão de execução.
 
 `GET /api/v1/me/progressao` pode ser consultado no perfil `local`, sem login. A resposta contém `nivel`, `patente` (`codigo`, `nome`, `imagemTitulo`), `xpTotal`, `xpAtual` dentro do nível, `xpDoProximoNivel` como limite acumulado e `xpParaProximoNivel` como saldo faltante. No nível 60, os dois campos de próximo nível são `null`. Também devolve `estrelasForjadas`, `segundosEmOrbit`, `horasEmOrbit` com duas casas decimais e `orbitAtual` em dias lógicos consecutivos. Para cada insígnia, a resposta inclui código, nome, descrição, ícone, contagem atual, alvo e instante de desbloqueio; para cada constelação, inclui o total de estrelas, a meta de estrelas, o número de insígnias do grupo desbloqueadas, a meta de insígnias e o instante de desbloqueio.
 
@@ -197,7 +215,7 @@ Verificação manual: envie GET e PATCH aos quatro endpoints, com e sem `X-Usuar
 
 `PATCH /api/v1/amizades/pedidos/{id}` recebe `acao` (`ACEITAR`, `RECUSAR` ou `CANCELAR`). Só o destinatário pode aceitar ou recusar; só o remetente pode cancelar. O serviço valida a transição de estado antes de atualizar a linha. Na aceitação, a aplicação altera somente `pedido_amizade.status`; o trigger da migration V5 cria a `amizade` com os UUIDs em ordem canônica e remove o pedido na mesma transação. O adaptador limpa o contexto JPA após o `UPDATE` e consulta a amizade para a resposta. Recusa e cancelamento mantêm o pedido com o status e `respondido_em` atualizados.
 
-As ações usam `ConsultarIdentidadePort` para obter o usuário atual. No perfil `local`, crie um segundo usuário pelo endpoint local e selecione cada participante pelo cabeçalho `X-Usuario-Id`. Verifique envio, aceite, recusa, cancelamento e o efeito do trigger no PostgreSQL. Fora do perfil `local`, a identidade continua indisponível até BL-05.
+As ações usam `ConsultarIdentidadePort` para obter o usuário atual. No perfil `local`, crie um segundo usuário pelo endpoint local e selecione cada participante pelo cabeçalho `X-Usuario-Id`. Verifique envio, aceite, recusa, cancelamento e o efeito do trigger no PostgreSQL.
 
 ### Círculo social (#34)
 
