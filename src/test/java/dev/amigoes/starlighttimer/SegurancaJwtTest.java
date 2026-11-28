@@ -118,9 +118,11 @@ class SegurancaJwtTest extends AbstractIntegrationTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/api/v1/auth/cadastro", "/api/v1/auth/login", "/api/v1/auth/refresh"})
-    void liberaApenasPostNosCaminhosReservadosParaAutenticacao(String caminho) throws Exception {
-        mvc.perform(post(caminho)).andExpect(status().isNotFound());
+    @ValueSource(strings = {
+            "/api/v1/auth/cadastro", "/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/logout"
+    })
+    void liberaApenasPostNasRotasPublicasDeAutenticacao(String caminho) throws Exception {
+        mvc.perform(post(caminho)).andExpect(status().isBadRequest());
         mvc.perform(get(caminho)).andExpect(status().isUnauthorized());
     }
 

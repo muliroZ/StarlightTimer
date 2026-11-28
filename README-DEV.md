@@ -110,19 +110,33 @@ A CI verifica o build com `-DskipTests verify` durante a adoção inicial. A su�
 
 ### Autenticação
 
-Fora do perfil `local`, envie `Authorization: Bearer <JWT>` nas chamadas protegidas. O token usa HS256, com o UUID de um usuário ativo em `sub` e expiração em `exp`. No Swagger, use **Authorize** para informar o token.
+Fora do perfil `local`, envie `Authorization: Bearer <JWT>` nas chamadas protegidas. O token usa HS256, com o UUID de um usuário ativo em `sub`, expiração em `exp` e identificador único em `jti`. No Swagger, use **Authorize** para informar o token.
 
 A configuração de assinatura é obrigatória em todos os perfis, inclusive `local`.
 
 - `JWT_SECRET` é o segredo de assinatura, com pelo menos 32 bytes em UTF-8. Gere o valor com `openssl rand -base64 48`.
 - `JWT_VALIDITY_TIME` deve ser positivo. O valor `3600000` representa uma hora em milissegundos.
+- `JWT_REFRESH_VALIDITY_TIME` deve ser positivo. O padrão `2592000000` representa 30 dias em milissegundos.
 - `CORS_ALLOWED_ORIGINS` aceita origens separadas por vírgula. O padrão de desenvolvimento é `http://localhost:5173`.
 
-Health e Swagger têm acesso público. A configuração também reserva `POST /api/v1/auth/cadastro`, `POST /api/v1/auth/login` e `POST /api/v1/auth/refresh` para os endpoints da issue #74. A emissão de tokens pela API chega nessa issue.
+Health, Swagger e as quatro operações de autenticação têm acesso público. As operações abaixo recebem JSON via POST. O servidor ignora o cabeçalho `Authorization` nesses POSTs, inclusive quando o Bearer expirou.
+
+| Rota | Campos do corpo | Resposta |
+| --- | --- | --- |
+| `/api/v1/auth/cadastro` | `email`, `senha`, `nomeExibido`, `fusoHorario` | `201` com `id`, `email`, `nomeExibido` e `fusoHorario` |
+| `/api/v1/auth/login` | `email`, `senha` | `200` com o par de tokens |
+| `/api/v1/auth/refresh` | `refreshToken` | `200` com um novo par de tokens |
+| `/api/v1/auth/logout` | `refreshToken` | `204`, inclusive se o token já foi revogado |
+
+No cadastro, informe um fuso IANA e uma senha de pelo menos 8 caracteres e até 72 bytes em UTF-8. O servidor armazena o hash BCrypt da senha e responde `409` para um e-mail já cadastrado. O login responde `401` com a mesma mensagem para credenciais inválidas.
+
+O par contém `accessToken`, `refreshToken`, `tipoToken` (`Bearer`) e `expiraEmSegundos` (do access token). O servidor persiste apenas o hash SHA-256 do refresh token e registra o `User-Agent` de login ou refresh quando fornecido. Substitua os dois tokens a cada refresh bem-sucedido. Se o refresh token for desconhecido, expirado ou já revogado, o refresh responde `401`.
+
+O logout revoga o refresh token apresentado. Um access token já emitido continua válido durante sua vigência. Se um refresh concorrente vencer o logout do mesmo token, o refresh token sucessor continua válido.
 
 ### Acesso local sem JWT
 
-Sem perfil ativo explícito, a API usa o perfil `local`. Para iniciar nesse perfil, configure `JWT_SECRET` e `JWT_VALIDITY_TIME` em `.env` conforme os passos de setup. A API cria no startup um usuário padrão (`00000000-0000-0000-0000-000000000001`) com perfil e configurações. Os endpoints de negócio usam esse usuário sem exigir autenticação nem cabeçalhos.
+Sem perfil ativo explícito, a API usa o perfil `local`. Para iniciar nesse perfil, configure `JWT_SECRET` e `JWT_VALIDITY_TIME` em `.env` conforme os passos de setup. A API cria no startup um usuário padrão (`00000000-0000-0000-0000-000000000001`) com perfil e configurações. Os endpoints de negócio usam esse usuário sem exigir autenticação nem cabeçalhos. As rotas `/api/v1/auth/**` também funcionam em `local` para exercitar o fluxo de login, mas o adaptador local ignora o access token emitido. Use `X-Usuario-Id` para selecionar a conta nas rotas de negócio.
 
 Para criar outro usuário local, chame `POST /api/v1/usuarios/local` com `email`, `nomeExibido` e `fusoHorario` IANA. A resposta `201` contém o `id`. Envie `X-Usuario-Id: <id>` nas chamadas seguintes para selecionar esse usuário. O cabeçalho é opcional e só funciona no perfil `local`; IDs inexistentes ou inativos recebem `404`. Não use o perfil `local` em ambiente exposto a usuários externos.
 

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.net.URI;
 
-@RestControllerAdvice(assignableTypes = {UsuarioLocalController.class, PerfilController.class, ConfiguracoesUsuarioController.class})
+@RestControllerAdvice(assignableTypes = {UsuarioLocalController.class, PerfilController.class, ConfiguracoesUsuarioController.class, AutenticacaoController.class})
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class CadastroUsuarioExceptionHandler {
     @ExceptionHandler(EmailJaCadastradoException.class)
